@@ -8,6 +8,13 @@ import os
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=['*'])
+@app.route('/')
+def inicio():
+    try:
+        with open('index.html', 'r', encoding='utf-8') as f:
+            return f.read()
+    except:
+        return "🚀 ServiMarket API funcionando! Ve a /api/servicios para ver los servicios"
 
 # Configuración
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
