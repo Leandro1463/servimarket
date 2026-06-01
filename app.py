@@ -1,35 +1,23 @@
 from flask import Flask, jsonify, request, session
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timedelta
 import hashlib
 import secrets
 import os
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=['*'])
-@app.route('/')
-def inicio():
-    try:
-        with open('index.html', 'r', encoding='utf-8') as f:
-            return f.read()
-    except:
-        return "🚀 ServiMarket API funcionando! Ve a /api/servicios para ver los servicios"
-
-@app.route('/index.html')
-def index_html():
-    return inicio()  # Redirigir a la misma función
 
 # Configuración
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(BASE_DIR, "ecommerce.db")}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = secrets.token_hex(16)  # Para sesiones
+app.config['SECRET_KEY'] = secrets.token_hex(16)
 db = SQLAlchemy(app)
 
 # ========== FUNCIÓN PARA ENCRIPTAR ==========
 def hash_password(password):
-    """Encriptar contraseña con SHA256"""
     return hashlib.sha256(password.encode()).hexdigest()
 
 # ========== MODELOS ==========
@@ -37,7 +25,7 @@ class Usuario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
     nombre = db.Column(db.String(100), nullable=False)
-    password = db.Column(db.String(200), nullable=False)  # Contraseña encriptada
+    password = db.Column(db.String(200), nullable=False)
     es_premium = db.Column(db.Boolean, default=False)
     fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -54,22 +42,18 @@ class Servicio(db.Model):
 
 @app.route('/api/registro', methods=['POST'])
 def registrar_usuario():
-    """Registrar un nuevo usuario"""
     datos = request.json
     email = datos.get('email')
     nombre = datos.get('nombre')
     password = datos.get('password')
     
-    # Validaciones
     if not email or not nombre or not password:
         return jsonify({'error': 'Todos los campos son requeridos'}), 400
     
-    # Verificar si ya existe
     usuario_existente = Usuario.query.filter_by(email=email).first()
     if usuario_existente:
         return jsonify({'error': 'El email ya está registrado'}), 400
     
-    # Crear usuario con contraseña encriptada
     nuevo_usuario = Usuario(
         email=email,
         nombre=nombre,
@@ -79,7 +63,6 @@ def registrar_usuario():
     db.session.add(nuevo_usuario)
     db.session.commit()
     
-    # Iniciar sesión automáticamente
     session['usuario_id'] = nuevo_usuario.id
     session['usuario_nombre'] = nuevo_usuario.nombre
     
@@ -93,7 +76,6 @@ def registrar_usuario():
 
 @app.route('/api/login', methods=['POST'])
 def login_usuario():
-    """Iniciar sesión"""
     datos = request.json
     email = datos.get('email')
     password = datos.get('password')
@@ -105,11 +87,9 @@ def login_usuario():
     if not usuario:
         return jsonify({'error': 'Usuario no encontrado'}), 404
     
-    # Verificar contraseña
     if usuario.password != hash_password(password):
         return jsonify({'error': 'Contraseña incorrecta'}), 401
     
-    # Guardar sesión
     session['usuario_id'] = usuario.id
     session['usuario_nombre'] = usuario.nombre
     
@@ -123,13 +103,11 @@ def login_usuario():
 
 @app.route('/api/logout', methods=['POST'])
 def logout_usuario():
-    """Cerrar sesión"""
     session.clear()
     return jsonify({'mensaje': 'Sesión cerrada'})
 
 @app.route('/api/usuario/actual', methods=['GET'])
 def usuario_actual():
-    """Obtener el usuario logueado"""
     if 'usuario_id' in session:
         usuario = Usuario.query.get(session['usuario_id'])
         if usuario:
@@ -141,17 +119,16 @@ def usuario_actual():
             })
     return jsonify({'error': 'No hay sesión activa'}), 401
 
-# ========== ENDPOINTS DE SERVICIOS (ACTUALIZADOS) ==========
+# ========== ENDPOINTS DE SERVICIOS ==========
 
 @app.route('/api/servicios', methods=['GET'])
 def obtener_servicios():
-    """Obtener todos los servicios"""
     servicios = Servicio.query.all()
     return jsonify([
         {
             'id': s.id,
             'titulo': s.titulo,
-            'descripcion': s.descripcion,  # Corregido: descripcion
+            'descripcion': s.descripcion,
             'precio': s.precio,
             'vendedor_id': s.vendedor_id,
             'vendedor_nombre': s.vendedor.nombre if s.vendedor else 'Anónimo'
@@ -161,7 +138,6 @@ def obtener_servicios():
 
 @app.route('/api/servicios', methods=['POST'])
 def crear_servicio():
-    """Publicar un nuevo servicio (requiere login)"""
     if 'usuario_id' not in session:
         return jsonify({'error': 'Debes iniciar sesión para publicar'}), 401
     
@@ -178,7 +154,6 @@ def crear_servicio():
 
 @app.route('/api/servicios/<int:id>', methods=['DELETE'])
 def eliminar_servicio(id):
-    """Eliminar un servicio (solo si eres el dueño)"""
     if 'usuario_id' not in session:
         return jsonify({'error': 'Debes iniciar sesión'}), 401
     
@@ -186,7 +161,6 @@ def eliminar_servicio(id):
     if not servicio:
         return jsonify({'error': 'Servicio no encontrado'}), 404
     
-    # Verificar que el usuario es el dueño
     if servicio.vendedor_id != session['usuario_id']:
         return jsonify({'error': 'No puedes eliminar servicios de otros usuarios'}), 403
     
@@ -196,7 +170,6 @@ def eliminar_servicio(id):
 
 @app.route('/api/mis-servicios', methods=['GET'])
 def mis_servicios():
-    """Obtener solo los servicios del usuario logueado"""
     if 'usuario_id' not in session:
         return jsonify({'error': 'Debes iniciar sesión'}), 401
     
@@ -213,54 +186,20 @@ def mis_servicios():
 
 @app.route('/api/membresia/estado', methods=['GET'])
 def estado_membresia():
-    """Verificar si el sistema está en modo gratuito"""
     return jsonify({
         'modo_gratuito': True,
         'mensaje': 'Actualmente todo es gratis mientras construimos la comunidad'
     })
 
-# ========== INICIALIZAR BASE DE DATOS ==========
-with app.app_context():
-    db.create_all()
-    
-    # Crear usuario de ejemplo si no existe
-    if Usuario.query.count() == 0:
-        usuario_demo = Usuario(
-            email="demo@ejemplo.com",
-            nombre="Usuario Demo",
-            password=hash_password("123456"),
-            es_premium=False
-        )
-        db.session.add(usuario_demo)
-        db.session.commit()
-        
-        # Servicios de ejemplo para el usuario demo
-        servicio1 = Servicio(
-            titulo="Diseño de Logo",
-            descripcion="Logo profesional en 24h",
-            precio=50,
-            vendedor_id=1
-        )
-        servicio2 = Servicio(
-            titulo="Página Web",
-            descripcion="Web de 3 páginas responsive",
-            precio=200,
-            vendedor_id=1
-        )
-        db.session.add_all([servicio1, servicio2])
-        db.session.commit()
-        print("✅ Base de datos creada con usuario demo (demo@ejemplo.com / 123456)")
 # ========== ENDPOINTS DE ANALYTICS ==========
 
 @app.route('/api/analytics/resumen', methods=['GET'])
 def analytics_resumen():
-    """Obtener resumen general de la plataforma"""
     total_usuarios = Usuario.query.count()
     total_servicios = Servicio.query.count()
     usuarios_premium = Usuario.query.filter_by(es_premium=True).count()
     
     # Servicios por día (últimos 7 días)
-    from datetime import timedelta
     servicios_por_dia = []
     for i in range(6, -1, -1):
         fecha = datetime.now() - timedelta(days=i)
@@ -290,7 +229,7 @@ def analytics_resumen():
             'count': count
         })
     
-    # Top 5 vendedores (más servicios publicados)
+    # Top 5 vendedores
     top_vendedores = db.session.query(
         Usuario.nombre,
         db.func.count(Servicio.id).label('total')
@@ -302,7 +241,7 @@ def analytics_resumen():
     
     top_vendedores_list = [{'nombre': v[0], 'total': v[1]} for v in top_vendedores]
     
-    # Precio promedio de servicios
+    # Precio promedio
     precio_promedio = db.session.query(db.func.avg(Servicio.precio)).scalar() or 0
     
     return jsonify({
@@ -318,7 +257,6 @@ def analytics_resumen():
 
 @app.route('/api/analytics/usuarios', methods=['GET'])
 def analytics_usuarios():
-    """Listar todos los usuarios con sus estadísticas"""
     usuarios = Usuario.query.all()
     resultado = []
     for u in usuarios:
@@ -335,7 +273,6 @@ def analytics_usuarios():
 
 @app.route('/api/analytics/servicios', methods=['GET'])
 def analytics_servicios():
-    """Listar todos los servicios con detalles"""
     servicios = Servicio.query.all()
     resultado = []
     for s in servicios:
@@ -348,18 +285,76 @@ def analytics_servicios():
         })
     return jsonify(resultado)
 
+# ========== RUTAS HTML (AL FINAL - IMPORTANTE) ==========
+
+@app.route('/')
+def inicio():
+    try:
+        with open('index.html', 'r', encoding='utf-8') as f:
+            return f.read()
+    except:
+        return "🚀 ServiMarket API funcionando!"
+
+@app.route('/index.html')
+def index_html():
+    return inicio()
+
 @app.route('/dashboard')
 def dashboard():
     try:
         with open('dashboard.html', 'r', encoding='utf-8') as f:
             return f.read()
     except:
-        return "Dashboard no encontrado. Asegúrate que dashboard.html existe."
+        return "Dashboard no encontrado"
 
 @app.route('/dashboard.html')
 def dashboard_html():
-    return dashboard()  # Redirigir a la misma función
+    return dashboard()
+
+@app.route('/<path:filename>')
+def servir_html(filename):
+    # No interferir con las rutas de API
+    if filename.startswith('api/'):
+        return "Ruta no disponible", 404
+    if filename.endswith('.html'):
+        try:
+            with open(filename, 'r', encoding='utf-8') as f:
+                return f.read()
+        except FileNotFoundError:
+            return "Archivo no encontrado", 404
+    return "Ruta no disponible", 404
+
+# ========== INICIALIZAR BASE DE DATOS ==========
+with app.app_context():
+    db.create_all()
     
+    if Usuario.query.count() == 0:
+        usuario_demo = Usuario(
+            email="demo@ejemplo.com",
+            nombre="Usuario Demo",
+            password=hash_password("123456"),
+            es_premium=False
+        )
+        db.session.add(usuario_demo)
+        db.session.commit()
+        
+        servicio1 = Servicio(
+            titulo="Diseño de Logo",
+            descripcion="Logo profesional en 24h",
+            precio=50,
+            vendedor_id=1
+        )
+        servicio2 = Servicio(
+            titulo="Página Web",
+            descripcion="Web de 3 páginas responsive",
+            precio=200,
+            vendedor_id=1
+        )
+        db.session.add_all([servicio1, servicio2])
+        db.session.commit()
+        print("✅ Base de datos creada con usuario demo (demo@ejemplo.com / 123456)")
+
+# ========== EJECUTAR SERVIDOR ==========
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print("🚀 Servidor corriendo")
