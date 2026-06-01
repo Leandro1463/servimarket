@@ -343,6 +343,18 @@ def analytics_servicios():
             'fecha': s.fecha_publicacion.strftime('%Y-%m-%d %H:%M')
         })
     return jsonify(resultado)
+
+@app.route('/dashboard')
+def dashboard():
+    try:
+        with open('dashboard.html', 'r', encoding='utf-8') as f:
+            return f.read()
+    except:
+        return "Dashboard no encontrado. Asegúrate que dashboard.html existe."
+
+@app.route('/dashboard.html')
+def dashboard_html():
+    return dashboard()  # Redirigir a la misma función
     
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
