@@ -246,7 +246,104 @@ with app.app_context():
         db.session.add_all([servicio1, servicio2])
         db.session.commit()
         print("✅ Base de datos creada con usuario demo (demo@ejemplo.com / 123456)")
+# ========== ENDPOINTS DE ANALYTICS ==========
 
+@app.route('/api/analytics/resumen', methods=['GET'])
+def analytics_resumen():
+    """Obtener resumen general de la plataforma"""
+    total_usuarios = Usuario.query.count()
+    total_servicios = Servicio.query.count()
+    usuarios_premium = Usuario.query.filter_by(es_premium=True).count()
+    
+    # Servicios por día (últimos 7 días)
+    from datetime import timedelta
+    servicios_por_dia = []
+    for i in range(6, -1, -1):
+        fecha = datetime.now() - timedelta(days=i)
+        fecha_inicio = datetime(fecha.year, fecha.month, fecha.day, 0, 0, 0)
+        fecha_fin = fecha_inicio + timedelta(days=1)
+        count = Servicio.query.filter(
+            Servicio.fecha_publicacion >= fecha_inicio,
+            Servicio.fecha_publicacion < fecha_fin
+        ).count()
+        servicios_por_dia.append({
+            'fecha': fecha.strftime('%d/%m'),
+            'count': count
+        })
+    
+    # Usuarios por día (últimos 7 días)
+    usuarios_por_dia = []
+    for i in range(6, -1, -1):
+        fecha = datetime.now() - timedelta(days=i)
+        fecha_inicio = datetime(fecha.year, fecha.month, fecha.day, 0, 0, 0)
+        fecha_fin = fecha_inicio + timedelta(days=1)
+        count = Usuario.query.filter(
+            Usuario.fecha_registro >= fecha_inicio,
+            Usuario.fecha_registro < fecha_fin
+        ).count()
+        usuarios_por_dia.append({
+            'fecha': fecha.strftime('%d/%m'),
+            'count': count
+        })
+    
+    # Top 5 vendedores (más servicios publicados)
+    top_vendedores = db.session.query(
+        Usuario.nombre,
+        db.func.count(Servicio.id).label('total')
+    ).join(Servicio, Usuario.id == Servicio.vendedor_id)\
+     .group_by(Usuario.id)\
+     .order_by(db.func.count(Servicio.id).desc())\
+     .limit(5)\
+     .all()
+    
+    top_vendedores_list = [{'nombre': v[0], 'total': v[1]} for v in top_vendedores]
+    
+    # Precio promedio de servicios
+    precio_promedio = db.session.query(db.func.avg(Servicio.precio)).scalar() or 0
+    
+    return jsonify({
+        'total_usuarios': total_usuarios,
+        'total_servicios': total_servicios,
+        'usuarios_premium': usuarios_premium,
+        'porcentaje_premium': round((usuarios_premium / total_usuarios * 100) if total_usuarios > 0 else 0, 1),
+        'precio_promedio': round(precio_promedio, 2),
+        'servicios_por_dia': servicios_por_dia,
+        'usuarios_por_dia': usuarios_por_dia,
+        'top_vendedores': top_vendedores_list
+    })
+
+@app.route('/api/analytics/usuarios', methods=['GET'])
+def analytics_usuarios():
+    """Listar todos los usuarios con sus estadísticas"""
+    usuarios = Usuario.query.all()
+    resultado = []
+    for u in usuarios:
+        servicios_count = Servicio.query.filter_by(vendedor_id=u.id).count()
+        resultado.append({
+            'id': u.id,
+            'nombre': u.nombre,
+            'email': u.email,
+            'es_premium': u.es_premium,
+            'fecha_registro': u.fecha_registro.strftime('%Y-%m-%d %H:%M'),
+            'total_servicios': servicios_count
+        })
+    return jsonify(resultado)
+
+@app.route('/api/analytics/servicios', methods=['GET'])
+def analytics_servicios():
+    """Listar todos los servicios con detalles"""
+    servicios = Servicio.query.all()
+    resultado = []
+    for s in servicios:
+        resultado.append({
+            'id': s.id,
+            'titulo': s.titulo,
+            'precio': s.precio,
+            'vendedor': s.vendedor.nombre if s.vendedor else 'Anónimo',
+            'fecha': s.fecha_publicacion.strftime('%Y-%m-%d %H:%M')
+        })
+    return jsonify(resultado)
+    
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print("🚀 Servidor corriendo")
