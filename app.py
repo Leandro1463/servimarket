@@ -11,7 +11,21 @@ CORS(app, supports_credentials=True, origins=['*'])
 
 # Configuración
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(BASE_DIR, "ecommerce.db")}'
+
+# Detectar si estamos en producción (Render) o local
+if os.environ.get('DATABASE_URL'):
+    # Usar PostgreSQL en producción
+    database_url = os.environ.get('DATABASE_URL')
+    # Render usa 'postgres://' pero SQLAlchemy necesita 'postgresql://'
+    if database_url and database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    print("✅ Usando base de datos PostgreSQL (producción)")
+else:
+    # Usar SQLite en local
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(BASE_DIR, "ecommerce.db")}'
+    print("✅ Usando base de datos SQLite (local)")
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 db = SQLAlchemy(app)
@@ -21,22 +35,34 @@ def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
 # ========== MODELOS ==========
+
 class Usuario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
     nombre = db.Column(db.String(100), nullable=False)
     password = db.Column(db.String(200), nullable=False)
+    telefono = db.Column(db.String(50), nullable=True)
+    whatsapp = db.Column(db.String(50), nullable=True)
     es_premium = db.Column(db.Boolean, default=False)
     fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
 
-class Servicio(db.Model):
+class Publicacion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    tipo = db.Column(db.String(20), nullable=False)  # 'producto', 'servicio', 'local'
     titulo = db.Column(db.String(100), nullable=False)
     descripcion = db.Column(db.String(500), nullable=False)
-    precio = db.Column(db.Float, nullable=False)
-    vendedor_id = db.Column(db.Integer, db.ForeignKey('usuario.id'))
+    precio = db.Column(db.Float, nullable=True)  # opcional para locales
+    condicion = db.Column(db.String(20), nullable=True)  # 'nuevo', 'usado' (solo productos)
+    ubicacion = db.Column(db.String(100), nullable=True)  # ciudad/barrio
+    telefono_contacto = db.Column(db.String(50), nullable=True)
+    whatsapp_contacto = db.Column(db.String(50), nullable=True)
+    imagen_url = db.Column(db.String(500), nullable=True)  # para después con Cloudinary
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'))
     fecha_publicacion = db.Column(db.DateTime, default=datetime.utcnow)
-    vendedor = db.relationship('Usuario', backref='servicios')
+    visitas = db.Column(db.Integer, default=0)  # contador de vistas
+    
+    # Relación
+    usuario = db.relationship('Usuario', backref='publicaciones')
 
 # ========== ENDPOINTS DE USUARIO ==========
 
@@ -119,94 +145,139 @@ def usuario_actual():
             })
     return jsonify({'error': 'No hay sesión activa'}), 401
 
-# ========== ENDPOINTS DE SERVICIOS ==========
+# ========== ENDPOINTS DE PUBLICACIONES ==========
 
-@app.route('/api/servicios', methods=['GET'])
-def obtener_servicios():
-    servicios = Servicio.query.all()
+@app.route('/api/publicaciones', methods=['GET'])
+def obtener_publicaciones():
+    """Obtener publicaciones con filtros"""
+    tipo = request.args.get('tipo', None)
+    q = request.args.get('q', '')
+    min_precio = request.args.get('min_precio', 0, type=float)
+    max_precio = request.args.get('max_precio', 1000000, type=float)
+    ubicacion = request.args.get('ubicacion', '')
+    
+    query = Publicacion.query
+    
+    if tipo and tipo != '':
+        query = query.filter(Publicacion.tipo == tipo)
+    
+    if q:
+        query = query.filter(
+            Publicacion.titulo.contains(q) | Publicacion.descripcion.contains(q)
+        )
+    
+    if min_precio > 0 or max_precio < 1000000:
+        query = query.filter(Publicacion.precio.between(min_precio, max_precio))
+    
+    if ubicacion:
+        query = query.filter(Publicacion.ubicacion.contains(ubicacion))
+    
+    publicaciones = query.order_by(Publicacion.fecha_publicacion.desc()).all()
+    
     return jsonify([
         {
-            'id': s.id,
-            'titulo': s.titulo,
-            'descripcion': s.descripcion,
-            'precio': s.precio,
-            'vendedor_id': s.vendedor_id,
-            'vendedor_nombre': s.vendedor.nombre if s.vendedor else 'Anónimo'
+            'id': p.id,
+            'tipo': p.tipo,
+            'titulo': p.titulo,
+            'descripcion': p.descripcion,
+            'precio': p.precio,
+            'condicion': p.condicion,
+            'ubicacion': p.ubicacion,
+            'telefono_contacto': p.telefono_contacto,
+            'whatsapp_contacto': p.whatsapp_contacto,
+            'usuario_id': p.usuario_id,
+            'vendedor_nombre': p.usuario.nombre if p.usuario else 'Anónimo',
+            'fecha': p.fecha_publicacion.strftime('%d/%m/%Y'),
+            'visitas': p.visitas
         }
-        for s in servicios
+        for p in publicaciones
     ])
 
-@app.route('/api/servicios', methods=['POST'])
-def crear_servicio():
+@app.route('/api/publicaciones', methods=['POST'])
+def crear_publicacion():
+    """Crear una nueva publicacion"""
     if 'usuario_id' not in session:
-        return jsonify({'error': 'Debes iniciar sesión para publicar'}), 401
+        return jsonify({'error': 'Debes iniciar sesión'}), 401
     
     datos = request.json
-    nuevo_servicio = Servicio(
-        titulo=datos['titulo'],
-        descripcion=datos['descripcion'],
-        precio=datos['precio'],
-        vendedor_id=session['usuario_id']
+    
+    nueva = Publicacion(
+        tipo=datos.get('tipo'),
+        titulo=datos.get('titulo'),
+        descripcion=datos.get('descripcion'),
+        precio=datos.get('precio'),
+        condicion=datos.get('condicion'),
+        ubicacion=datos.get('ubicacion'),
+        telefono_contacto=datos.get('telefono_contacto'),
+        whatsapp_contacto=datos.get('whatsapp_contacto'),
+        usuario_id=session['usuario_id']
     )
-    db.session.add(nuevo_servicio)
+    
+    db.session.add(nueva)
     db.session.commit()
-    return jsonify({'mensaje': 'Servicio creado', 'id': nuevo_servicio.id}), 201
+    return jsonify({'mensaje': 'Publicación creada', 'id': nueva.id}), 201
 
-@app.route('/api/servicios/<int:id>', methods=['DELETE'])
-def eliminar_servicio(id):
+@app.route('/api/publicaciones/<int:id>', methods=['PUT'])
+def actualizar_publicacion(id):
+    """Actualizar publicacion (solo dueño)"""
     if 'usuario_id' not in session:
         return jsonify({'error': 'Debes iniciar sesión'}), 401
     
-    servicio = Servicio.query.get(id)
-    if not servicio:
-        return jsonify({'error': 'Servicio no encontrado'}), 404
+    pub = Publicacion.query.get(id)
+    if not pub:
+        return jsonify({'error': 'No encontrada'}), 404
     
-    if servicio.vendedor_id != session['usuario_id']:
-        return jsonify({'error': 'No puedes eliminar servicios de otros usuarios'}), 403
-    
-    db.session.delete(servicio)
-    db.session.commit()
-    return jsonify({'mensaje': 'Servicio eliminado'})
-
-@app.route('/api/servicios/<int:id>', methods=['PUT'])
-def actualizar_servicio(id):
-    """Actualizar un servicio (solo si eres el dueño)"""
-    if 'usuario_id' not in session:
-        return jsonify({'error': 'Debes iniciar sesión'}), 401
-    
-    servicio = Servicio.query.get(id)
-    if not servicio:
-        return jsonify({'error': 'Servicio no encontrado'}), 404
-    
-    # Verificar que el usuario es el dueño
-    if servicio.vendedor_id != session['usuario_id']:
-        return jsonify({'error': 'No puedes editar servicios de otros usuarios'}), 403
+    if pub.usuario_id != session['usuario_id']:
+        return jsonify({'error': 'No autorizado'}), 403
     
     datos = request.json
     if 'titulo' in datos:
-        servicio.titulo = datos['titulo']
+        pub.titulo = datos['titulo']
     if 'descripcion' in datos:
-        servicio.descripcion = datos['descripcion']
+        pub.descripcion = datos['descripcion']
     if 'precio' in datos:
-        servicio.precio = datos['precio']
+        pub.precio = datos['precio']
+    if 'ubicacion' in datos:
+        pub.ubicacion = datos['ubicacion']
+    if 'telefono_contacto' in datos:
+        pub.telefono_contacto = datos['telefono_contacto']
     
     db.session.commit()
-    return jsonify({'mensaje': 'Servicio actualizado correctamente'})
+    return jsonify({'mensaje': 'Actualizada correctamente'})
 
-@app.route('/api/mis-servicios', methods=['GET'])
-def mis_servicios():
+@app.route('/api/publicaciones/<int:id>', methods=['DELETE'])
+def eliminar_publicacion(id):
+    """Eliminar publicacion (solo dueño)"""
     if 'usuario_id' not in session:
         return jsonify({'error': 'Debes iniciar sesión'}), 401
     
-    servicios = Servicio.query.filter_by(vendedor_id=session['usuario_id']).all()
+    pub = Publicacion.query.get(id)
+    if not pub:
+        return jsonify({'error': 'No encontrada'}), 404
+    
+    if pub.usuario_id != session['usuario_id']:
+        return jsonify({'error': 'No autorizado'}), 403
+    
+    db.session.delete(pub)
+    db.session.commit()
+    return jsonify({'mensaje': 'Publicación eliminada'})
+
+@app.route('/api/mis-publicaciones', methods=['GET'])
+def mis_publicaciones():
+    """Obtener publicaciones del usuario logueado"""
+    if 'usuario_id' not in session:
+        return jsonify({'error': 'Debes iniciar sesión'}), 401
+    
+    pubs = Publicacion.query.filter_by(usuario_id=session['usuario_id']).all()
     return jsonify([
         {
-            'id': s.id,
-            'titulo': s.titulo,
-            'descripcion': s.descripcion,
-            'precio': s.precio
+            'id': p.id,
+            'tipo': p.tipo,
+            'titulo': p.titulo,
+            'precio': p.precio,
+            'fecha': p.fecha_publicacion.strftime('%d/%m/%Y')
         }
-        for s in servicios
+        for p in pubs
     ])
 
 @app.route('/api/membresia/estado', methods=['GET'])
@@ -220,21 +291,26 @@ def estado_membresia():
 
 @app.route('/api/analytics/resumen', methods=['GET'])
 def analytics_resumen():
+    from datetime import timedelta
+    
     total_usuarios = Usuario.query.count()
-    total_servicios = Servicio.query.count()
+    total_publicaciones = Publicacion.query.count()
+    productos = Publicacion.query.filter_by(tipo='producto').count()
+    servicios = Publicacion.query.filter_by(tipo='servicio').count()
+    locales = Publicacion.query.filter_by(tipo='local').count()
     usuarios_premium = Usuario.query.filter_by(es_premium=True).count()
     
-    # Servicios por día (últimos 7 días)
-    servicios_por_dia = []
+    # Publicaciones por día (últimos 7 días)
+    publicaciones_por_dia = []
     for i in range(6, -1, -1):
         fecha = datetime.now() - timedelta(days=i)
         fecha_inicio = datetime(fecha.year, fecha.month, fecha.day, 0, 0, 0)
         fecha_fin = fecha_inicio + timedelta(days=1)
-        count = Servicio.query.filter(
-            Servicio.fecha_publicacion >= fecha_inicio,
-            Servicio.fecha_publicacion < fecha_fin
+        count = Publicacion.query.filter(
+            Publicacion.fecha_publicacion >= fecha_inicio,
+            Publicacion.fecha_publicacion < fecha_fin
         ).count()
-        servicios_por_dia.append({
+        publicaciones_por_dia.append({
             'fecha': fecha.strftime('%d/%m'),
             'count': count
         })
@@ -254,28 +330,31 @@ def analytics_resumen():
             'count': count
         })
     
-    # Top 5 vendedores
+    # Top 5 vendedores (más publicaciones)
     top_vendedores = db.session.query(
         Usuario.nombre,
-        db.func.count(Servicio.id).label('total')
-    ).join(Servicio, Usuario.id == Servicio.vendedor_id)\
+        db.func.count(Publicacion.id).label('total')
+    ).join(Publicacion, Usuario.id == Publicacion.usuario_id)\
      .group_by(Usuario.id)\
-     .order_by(db.func.count(Servicio.id).desc())\
+     .order_by(db.func.count(Publicacion.id).desc())\
      .limit(5)\
      .all()
     
     top_vendedores_list = [{'nombre': v[0], 'total': v[1]} for v in top_vendedores]
     
-    # Precio promedio
-    precio_promedio = db.session.query(db.func.avg(Servicio.precio)).scalar() or 0
+    # Precio promedio de publicaciones
+    precio_promedio = db.session.query(db.func.avg(Publicacion.precio)).scalar() or 0
     
     return jsonify({
         'total_usuarios': total_usuarios,
-        'total_servicios': total_servicios,
+        'total_publicaciones': total_publicaciones,
+        'productos': productos,
+        'servicios': servicios,
+        'locales': locales,
         'usuarios_premium': usuarios_premium,
         'porcentaje_premium': round((usuarios_premium / total_usuarios * 100) if total_usuarios > 0 else 0, 1),
         'precio_promedio': round(precio_promedio, 2),
-        'servicios_por_dia': servicios_por_dia,
+        'publicaciones_por_dia': publicaciones_por_dia,
         'usuarios_por_dia': usuarios_por_dia,
         'top_vendedores': top_vendedores_list
     })
@@ -285,28 +364,29 @@ def analytics_usuarios():
     usuarios = Usuario.query.all()
     resultado = []
     for u in usuarios:
-        servicios_count = Servicio.query.filter_by(vendedor_id=u.id).count()
+        publicaciones_count = Publicacion.query.filter_by(usuario_id=u.id).count()
         resultado.append({
             'id': u.id,
             'nombre': u.nombre,
             'email': u.email,
             'es_premium': u.es_premium,
             'fecha_registro': u.fecha_registro.strftime('%Y-%m-%d %H:%M'),
-            'total_servicios': servicios_count
+            'total_publicaciones': publicaciones_count
         })
     return jsonify(resultado)
 
-@app.route('/api/analytics/servicios', methods=['GET'])
-def analytics_servicios():
-    servicios = Servicio.query.all()
+@app.route('/api/analytics/publicaciones', methods=['GET'])
+def analytics_publicaciones():
+    publicaciones = Publicacion.query.all()
     resultado = []
-    for s in servicios:
+    for p in publicaciones:
         resultado.append({
-            'id': s.id,
-            'titulo': s.titulo,
-            'precio': s.precio,
-            'vendedor': s.vendedor.nombre if s.vendedor else 'Anónimo',
-            'fecha': s.fecha_publicacion.strftime('%Y-%m-%d %H:%M')
+            'id': p.id,
+            'tipo': p.tipo,
+            'titulo': p.titulo,
+            'precio': p.precio,
+            'vendedor': p.usuario.nombre if p.usuario else 'Anónimo',
+            'fecha': p.fecha_publicacion.strftime('%Y-%m-%d %H:%M')
         })
     return jsonify(resultado)
 
@@ -362,22 +442,39 @@ with app.app_context():
         )
         db.session.add(usuario_demo)
         db.session.commit()
+        print("✅ Base de datos creada con usuario demo")
         
-        servicio1 = Servicio(
-            titulo="Diseño de Logo",
-            descripcion="Logo profesional en 24h",
-            precio=50,
-            vendedor_id=1
+        # Publicaciones de ejemplo
+        pub1 = Publicacion(
+            tipo="producto",
+            titulo="iPhone 12 usado",
+            descripcion="Excelente estado, 128GB, color negro, con cargador original",
+            precio=350,
+            condicion="usado",
+            ubicacion="CABA - Belgrano",
+            telefono_contacto="11-1234-5678",
+            usuario_id=1
         )
-        servicio2 = Servicio(
-            titulo="Página Web",
-            descripcion="Web de 3 páginas responsive",
-            precio=200,
-            vendedor_id=1
+        pub2 = Publicacion(
+            tipo="servicio",
+            titulo="Plomero matriculado",
+            descripcion="Reparaciones de pérdidas, instalación de cañerías, urgencias 24hs",
+            precio=15000,
+            ubicacion="Zona Norte",
+            telefono_contacto="11-8765-4321",
+            usuario_id=1
         )
-        db.session.add_all([servicio1, servicio2])
+        pub3 = Publicacion(
+            tipo="local",
+            titulo="Panadería La Esquina",
+            descripcion="Pan fresco todos los días, facturas, sandwiches, atención al público",
+            ubicacion="Av. Siempre Viva 123, San Isidro",
+            telefono_contacto="11-5566-7788",
+            usuario_id=1
+        )
+        db.session.add_all([pub1, pub2, pub3])
         db.session.commit()
-        print("✅ Base de datos creada con usuario demo (demo@ejemplo.com / 123456)")
+        print("✅ Publicaciones de ejemplo creadas")
 
 # ========== EJECUTAR SERVIDOR ==========
 if __name__ == '__main__':
