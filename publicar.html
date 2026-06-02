@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Publicar anuncio - ServiMarket</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .cancelar {
+            background: #6c757d;
+            margin-top: 10px;
+        }
+        .mensaje {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .exito {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .volver {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .volver a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .condicion-field {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📢 Publicar anuncio</h1>
+        <div class="subtitle">Completa los datos de lo que querés vender u ofrecer</div>
+        
+        <form id="form-publicar">
+            <div class="form-group">
+                <label>Tipo de publicación *</label>
+                <select id="pub-tipo" required>
+                    <option value="producto">🛍️ Producto (nuevo/usado)</option>
+                    <option value="servicio">🔧 Servicio</option>
+                    <option value="local">🏪 Local comercial</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="condicion-group" style="display: none;">
+                <label>Condición *</label>
+                <select id="pub-condicion">
+                    <option value="nuevo">🆕 Nuevo</option>
+                    <option value="usado">📦 Usado</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Título *</label>
+                <input type="text" id="pub-titulo" placeholder="Ej: iPhone 12 usado, Jardinería, Panadería..." required>
+            </div>
+            
+            <div class="form-group">
+                <label>Descripción *</label>
+                <textarea id="pub-descripcion" placeholder="Describe tu producto, servicio o local en detalle..." required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Precio (opcional)</label>
+                <input type="number" id="pub-precio" placeholder="Ej: 50000">
+            </div>
+            
+            <div class="form-group">
+                <label>Ubicación *</label>
+                <input type="text" id="pub-ubicacion" placeholder="Ej: CABA - Belgrano, Zona Norte" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Teléfono de contacto *</label>
+                <input type="text" id="pub-telefono" placeholder="Ej: 11-1234-5678" required>
+            </div>
+            
+            <div class="form-group">
+                <label>WhatsApp (opcional)</label>
+                <input type="text" id="pub-whatsapp" placeholder="Ej: 11-8765-4321">
+            </div>
+            
+            <button type="button" onclick="publicar()">🚀 Publicar anuncio</button>
+            <button type="button" class="cancelar" onclick="window.location.href='/'">❌ Cancelar</button>
+        </form>
+        
+        <div id="mensaje"></div>
+        
+        <div class="volver">
+            <a href="/">← Volver a la página principal</a>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:5000'
+            : 'https://servimarket.onrender.com';
+        
+        // Verificar si el usuario está logueado
+        async function verificarSesion() {
+            try {
+                const res = await fetch(`${API_URL}/api/usuario/actual`);
+                if (!res.ok) {
+                    // No está logueado, redirigir al inicio
+                    alert('Debes iniciar sesión para publicar un anuncio');
+                    window.location.href = '/';
+                }
+            } catch(e) {
+                alert('Error de conexión');
+                window.location.href = '/';
+            }
+        }
+        
+        // Mostrar/ocultar campo condición según tipo
+        document.getElementById('pub-tipo').addEventListener('change', function() {
+            const condicionGroup = document.getElementById('condicion-group');
+            if (this.value === 'producto') {
+                condicionGroup.style.display = 'block';
+                document.getElementById('pub-condicion').required = true;
+            } else {
+                condicionGroup.style.display = 'none';
+                document.getElementById('pub-condicion').required = false;
+            }
+        });
+        
+        async function publicar() {
+            const tipo = document.getElementById('pub-tipo').value;
+            const titulo = document.getElementById('pub-titulo').value;
+            const descripcion = document.getElementById('pub-descripcion').value;
+            const precio = parseFloat(document.getElementById('pub-precio').value) || null;
+            const condicion = document.getElementById('pub-condicion').value;
+            const ubicacion = document.getElementById('pub-ubicacion').value;
+            const telefono_contacto = document.getElementById('pub-telefono').value;
+            const whatsapp_contacto = document.getElementById('pub-whatsapp').value;
+            
+            if (!titulo || !descripcion || !ubicacion || !telefono_contacto) {
+                mostrarMensaje('Completá todos los campos obligatorios', 'error');
+                return;
+            }
+            
+            const publicacion = {
+                tipo: tipo,
+                titulo: titulo,
+                descripcion: descripcion,
+                precio: precio,
+                condicion: tipo === 'producto' ? condicion : null,
+                ubicacion: ubicacion,
+                telefono_contacto: telefono_contacto,
+                whatsapp_contacto: whatsapp_contacto
+            };
+            
+            try {
+                const res = await fetch(`${API_URL}/api/publicaciones`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(publicacion)
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    mostrarMensaje('✅ ¡Publicación creada con éxito! Redirigiendo...', 'exito');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    mostrarMensaje(data.error || 'Error al publicar', 'error');
+                }
+            } catch(e) {
+                mostrarMensaje('Error de conexión', 'error');
+            }
+        }
+        
+        function mostrarMensaje(texto, tipo) {
+            const div = document.getElementById('mensaje');
+            div.innerHTML = `<div class="mensaje ${tipo}">${texto}</div>`;
+            setTimeout(() => {
+                div.innerHTML = '';
+            }, 3000);
+        }
+        
+        verificarSesion();
+    </script>
+</body>
+</html>

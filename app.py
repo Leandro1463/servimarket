@@ -27,7 +27,10 @@ else:
     print("✅ Usando base de datos SQLite (local)")
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = secrets.token_hex(16)
+# Configuración de sesión persistente
+app.config['SECRET_KEY'] = 'mi-clave-secreta-servimarket-2024'  # Una clave fija
+app.config['SESSION_PERMANENT'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # La sesión dura 7 días
 db = SQLAlchemy(app)
 
 # ========== FUNCIÓN PARA ENCRIPTAR ==========
@@ -418,6 +421,14 @@ def dashboard_html():
 
 @app.route('/publicar.html')
 def publicar():
+    try:
+        with open('publicar.html', 'r', encoding='utf-8') as f:
+            return f.read()
+    except:
+        return "Página no encontrada", 404
+    
+@app.route('/publicar')
+def publicar_sin_html():
     try:
         with open('publicar.html', 'r', encoding='utf-8') as f:
             return f.read()
