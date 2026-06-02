@@ -265,34 +265,6 @@ def eliminar_publicacion(id):
     db.session.commit()
     return jsonify({'mensaje': 'Publicación eliminada'})
 
-@app.route('/api/publicaciones/<int:id>', methods=['PUT'])
-def actualizar_publicacion(id):
-    """Actualizar una publicación (solo dueño)"""
-    if 'usuario_id' not in session:
-        return jsonify({'error': 'Debes iniciar sesión'}), 401
-    
-    pub = Publicacion.query.get(id)
-    if not pub:
-        return jsonify({'error': 'Publicación no encontrada'}), 404
-    
-    if pub.usuario_id != session['usuario_id']:
-        return jsonify({'error': 'No autorizado'}), 403
-    
-    datos = request.json
-    if 'titulo' in datos:
-        pub.titulo = datos['titulo']
-    if 'descripcion' in datos:
-        pub.descripcion = datos['descripcion']
-    if 'precio' in datos:
-        pub.precio = datos['precio']
-    if 'ubicacion' in datos:
-        pub.ubicacion = datos['ubicacion']
-    if 'telefono_contacto' in datos:
-        pub.telefono_contacto = datos['telefono_contacto']
-    
-    db.session.commit()
-    return jsonify({'mensaje': 'Publicación actualizada'})
-
 @app.route('/api/mis-publicaciones', methods=['GET'])
 def mis_publicaciones():
     """Obtener publicaciones del usuario logueado"""
