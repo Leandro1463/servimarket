@@ -23,6 +23,17 @@
             margin-bottom: 20px;
         }
         
+        .btn-publicar {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .btn-publicar:hover { background: #218838; }
+        
         .filtros {
             background: white;
             padding: 20px;
@@ -42,29 +53,6 @@
         }
         .filtros button {
             background: #667eea;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        
-        .form-publicar {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            display: none;
-        }
-        .form-publicar input, .form-publicar textarea, .form-publicar select {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        .form-publicar button {
-            background: #28a745;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -137,7 +125,8 @@
         
         <div class="panel-usuario" id="panel-usuario-info" style="display: none;">
             <p>✅ Conectado como: <strong id="nombre-usuario"></strong></p>
-            <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+            <button class="btn-publicar" onclick="window.location.href='/publicar.html'">📢 Publicar anuncio</button>
+            <button class="btn-logout" onclick="logout()">🚪 Cerrar sesión</button>
         </div>
         
         <!-- Filtros -->
@@ -154,22 +143,6 @@
             <input type="number" id="filtro-precio-max" placeholder="Precio máx" step="1000">
             <button onclick="aplicarFiltros()">🔍 Buscar</button>
             <button onclick="limpiarFiltros()" style="background: #6c757d;">🗑️ Limpiar</button>
-        </div>
-        
-        <!-- Formulario publicar -->
-        <div class="form-publicar" id="form-publicar">
-            <h2>📢 Publicar anuncio</h2>
-            <select id="pub-tipo">
-                <option value="producto">🛍️ Producto</option>
-                <option value="servicio">🔧 Servicio</option>
-                <option value="local">🏪 Local</option>
-            </select>
-            <input type="text" id="pub-titulo" placeholder="Título">
-            <textarea id="pub-descripcion" placeholder="Descripción" rows="3"></textarea>
-            <input type="number" id="pub-precio" placeholder="Precio (opcional)">
-            <input type="text" id="pub-ubicacion" placeholder="Ubicación (ciudad/barrio)">
-            <input type="text" id="pub-telefono" placeholder="Teléfono de contacto">
-            <button onclick="publicarPublicacion()">Publicar anuncio</button>
         </div>
         
         <h2>📋 Últimos anuncios</h2>
@@ -226,7 +199,6 @@
                     usuarioActual = data;
                     document.getElementById('panel-login').style.display = 'none';
                     document.getElementById('panel-usuario-info').style.display = 'block';
-                    document.getElementById('form-publicar').style.display = 'block';
                     document.getElementById('nombre-usuario').innerText = data.nombre;
                     cargarPublicaciones();
                 } else {
@@ -240,44 +212,7 @@
             usuarioActual = null;
             document.getElementById('panel-login').style.display = 'block';
             document.getElementById('panel-usuario-info').style.display = 'none';
-            document.getElementById('form-publicar').style.display = 'none';
             cargarPublicaciones();
-        }
-        
-        async function publicarPublicacion() {
-            if (!usuarioActual) {
-                alert('Inicia sesión para publicar');
-                return;
-            }
-            
-            const publicacion = {
-                tipo: document.getElementById('pub-tipo').value,
-                titulo: document.getElementById('pub-titulo').value,
-                descripcion: document.getElementById('pub-descripcion').value,
-                precio: parseFloat(document.getElementById('pub-precio').value) || null,
-                ubicacion: document.getElementById('pub-ubicacion').value,
-                telefono_contacto: document.getElementById('pub-telefono').value
-            };
-            
-            try {
-                const res = await fetch(`${API_URL}/api/publicaciones`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(publicacion)
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    alert('Publicación creada');
-                    document.getElementById('pub-titulo').value = '';
-                    document.getElementById('pub-descripcion').value = '';
-                    document.getElementById('pub-precio').value = '';
-                    document.getElementById('pub-ubicacion').value = '';
-                    document.getElementById('pub-telefono').value = '';
-                    cargarPublicaciones();
-                } else {
-                    alert(data.error);
-                }
-            } catch(e) { alert('Error de conexión'); }
         }
         
         async function cargarPublicaciones() {
@@ -368,7 +303,6 @@
                     usuarioActual = await res.json();
                     document.getElementById('panel-login').style.display = 'none';
                     document.getElementById('panel-usuario-info').style.display = 'block';
-                    document.getElementById('form-publicar').style.display = 'block';
                     document.getElementById('nombre-usuario').innerText = usuarioActual.nombre;
                 }
                 cargarPublicaciones();
