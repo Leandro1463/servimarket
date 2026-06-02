@@ -168,6 +168,31 @@ def eliminar_servicio(id):
     db.session.commit()
     return jsonify({'mensaje': 'Servicio eliminado'})
 
+@app.route('/api/servicios/<int:id>', methods=['PUT'])
+def actualizar_servicio(id):
+    """Actualizar un servicio (solo si eres el dueño)"""
+    if 'usuario_id' not in session:
+        return jsonify({'error': 'Debes iniciar sesión'}), 401
+    
+    servicio = Servicio.query.get(id)
+    if not servicio:
+        return jsonify({'error': 'Servicio no encontrado'}), 404
+    
+    # Verificar que el usuario es el dueño
+    if servicio.vendedor_id != session['usuario_id']:
+        return jsonify({'error': 'No puedes editar servicios de otros usuarios'}), 403
+    
+    datos = request.json
+    if 'titulo' in datos:
+        servicio.titulo = datos['titulo']
+    if 'descripcion' in datos:
+        servicio.descripcion = datos['descripcion']
+    if 'precio' in datos:
+        servicio.precio = datos['precio']
+    
+    db.session.commit()
+    return jsonify({'mensaje': 'Servicio actualizado correctamente'})
+
 @app.route('/api/mis-servicios', methods=['GET'])
 def mis_servicios():
     if 'usuario_id' not in session:

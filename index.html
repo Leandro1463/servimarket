@@ -100,6 +100,16 @@
             border-radius: 5px;
             cursor: pointer;
         }
+        .btn-editar {
+            background: #ffc107;
+            color: #333;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+.btn-editar:hover { background: #e0a800; }
         .propio { border-left: 4px solid #28a745; }
         
         .premium-badge {
@@ -314,9 +324,12 @@
                     const esPropio = usuarioActual && servicio.vendedor_id === usuarioActual.usuario_id;
                     const clasePropio = esPropio ? 'propio' : '';
                     
-                    let botonEliminar = '';
+                    let botones = '';
                     if (esPropio) {
-                        botonEliminar = `<button class="btn-eliminar" onclick="eliminarServicio(${servicio.id})">Eliminar</button>`;
+                        botones = `
+                            <button class="btn-editar" onclick="abrirModalEditar(${servicio.id}, '${servicio.titulo.replace(/'/g, "\\'")}', '${servicio.descripcion.replace(/'/g, "\\'")}', ${servicio.precio})">✏️ Editar</button>
+                            <button class="btn-eliminar" onclick="eliminarServicio(${servicio.id})">🗑️ Eliminar</button>
+                        `;
                     }
                     
                     contenedor.innerHTML += `
@@ -325,7 +338,7 @@
                             <p class="servicio-descripcion">${servicio.descripcion}</p>
                             <div class="servicio-precio">$${servicio.precio}</div>
                             <div class="servicio-vendedor">👤 ${servicio.vendedor_nombre}</div>
-                            ${botonEliminar}
+                            <div style="margin-top: 10px;">${botones}</div>
                         </div>
                     `;
                 });
@@ -410,10 +423,68 @@
             }
         }
         
-        // ========== INICIALIZAR ==========
+
+                function abrirModalEditar(id, titulo, descripcion, precio) {
+            document.getElementById('editar-id').value = id;
+            document.getElementById('editar-titulo').value = titulo;
+            document.getElementById('editar-descripcion').value = descripcion;
+            document.getElementById('editar-precio').value = precio;
+            document.getElementById('modal-editar').style.display = 'flex';
+        }
+
+        function cerrarModalEditar() {
+            document.getElementById('modal-editar').style.display = 'none';
+        }
+
+        async function guardarEdicion() {
+            const id = document.getElementById('editar-id').value;
+            const titulo = document.getElementById('editar-titulo').value;
+            const descripcion = document.getElementById('editar-descripcion').value;
+            const precio = parseFloat(document.getElementById('editar-precio').value);
+            
+            if (!titulo || !descripcion || !precio) {
+                alert('Completa todos los campos');
+                return;
+            }
+            
+            try {
+                const respuesta = await fetch(`${API_URL}/api/servicios/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ titulo, descripcion, precio })
+                });
+                
+                const data = await respuesta.json();
+                
+                if (respuesta.ok) {
+                    alert('✅ Servicio actualizado correctamente');
+                    cerrarModalEditar();
+                    cargarServicios();
+                } else {
+                    alert(data.error || 'Error al actualizar');
+                }
+            } catch (error) {
+                alert('Error de conexión');
+            }
+        }
+    // ========== INICIALIZAR ==========
         cargarEstadoMembresia();
         cargarUsuarioActual();
         setInterval(cargarServicios, 5000);
     </script>
+    <!-- Modal para editar servicio -->
+    <div id="modal-editar" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; margin: 20px;">
+            <h3>✏️ Editar servicio</h3>
+            <input type="hidden" id="editar-id">
+            <input type="text" id="editar-titulo" placeholder="Título" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
+            <textarea id="editar-descripcion" placeholder="Descripción" rows="3" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+            <input type="number" id="editar-precio" placeholder="Precio" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
+            <div style="text-align: right;">
+                <button onclick="cerrarModalEditar()" style="background: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin-right: 10px;">Cancelar</button>
+                <button onclick="guardarEdicion()" style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px;">Guardar</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
