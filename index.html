@@ -1,390 +1,218 @@
-<!DOCTYPE html> <!-- version final corregida -->
+<!DOCTYPE html>
 <html>
 <head>
-    <title>ServiMarket - Publicá lo que vendés</title>
+    <title>ServiMarket</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        
-        .panel-usuario {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .btn-publicar {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-right: 10px;
-        }
-        .btn-publicar:hover { background: #218838; }
-
-        .btn-editar {
-            background: #ffc107;
-            color: #333;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-right: 5px;
-        }
-        .btn-editar:hover { background: #e0a800; }
-        
-        .filtros {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
-        }
-        .filtros input, .filtros select {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            flex: 1;
-            min-width: 150px;
-        }
-        .filtros button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
-        }
-        
-        .card {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .tipo-badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            margin-bottom: 10px;
-        }
-        
-        .precio { font-size: 20px; font-weight: bold; color: #28a745; margin: 10px 0; }
-        .ubicacion { color: #666; font-size: 12px; margin: 5px 0; }
-        .contacto { font-size: 12px; color: #888; margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; }
-        
-        .btn-eliminar {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        
-        button { cursor: pointer; }
-        .btn-logout { background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; }
-        .btn-registro { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 5px; }
-        .btn-login { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; }
-        
-        input, select { padding: 10px; margin: 5px; border: 1px solid #ddd; border-radius: 5px; }
-        
-        footer { text-align: center; margin-top: 30px; padding: 20px; color: #888; }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:Arial,sans-serif;background:#f5f5f5;padding:20px}
+        .container{max-width:1200px;margin:0 auto}
+        .header{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:30px;border-radius:15px;margin-bottom:30px;text-align:center}
+        .panel-usuario{background:#fff;padding:20px;border-radius:15px;margin-bottom:20px}
+        .btn-publicar{background:#28a745;color:#fff;border:none;padding:10px 20px;border-radius:5px;cursor:pointer;margin-right:10px}
+        .btn-editar{background:#ffc107;color:#333;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;margin-right:5px}
+        .filtros{background:#fff;padding:20px;border-radius:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;gap:10px}
+        .filtros input,.filtros select{padding:10px;border:1px solid #ddd;border-radius:5px;flex:1;min-width:150px}
+        .filtros button{background:#667eea;color:#fff;border:none;padding:10px 20px;border-radius:5px;cursor:pointer}
+        .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:20px}
+        .card{background:#fff;border-radius:15px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}
+        .tipo-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;margin-bottom:10px}
+        .precio{font-size:20px;font-weight:bold;color:#28a745;margin:10px 0}
+        .ubicacion{color:#666;font-size:12px;margin:5px 0}
+        .contacto{font-size:12px;color:#888;margin-top:10px;padding-top:10px;border-top:1px solid #eee}
+        .btn-eliminar{background:#dc3545;color:#fff;border:none;padding:5px 10px;border-radius:5px;cursor:pointer}
+        .btn-logout{background:#dc3545;color:#fff;border:none;padding:10px 20px;border-radius:5px}
+        .btn-registro{background:#667eea;color:#fff;border:none;padding:10px 20px;border-radius:5px}
+        .btn-login{background:#28a745;color:#fff;border:none;padding:10px 20px;border-radius:5px}
+        input,select{padding:10px;margin:5px;border:1px solid #ddd;border-radius:5px}
+        footer{text-align:center;margin-top:30px;padding:20px;color:#888}
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🛒 ServiMarket</h1>
-            <p>Comprá y vendé productos, servicios y locales cerca tuyo</p>
-        </div>
-        
-        <!-- Panel login -->
-        <div class="panel-usuario" id="panel-login">
-            <h3>🔐 Accede a tu cuenta</h3>
-            <input type="email" id="login-email" placeholder="Email">
-            <input type="text" id="login-nombre" placeholder="Nombre (registro)">
-            <input type="password" id="login-password" placeholder="Contraseña">
-            <button class="btn-registro" onclick="registrar()">Registrarse</button>
-            <button class="btn-login" onclick="login()">Iniciar sesión</button>
-            <div id="login-mensaje"></div>
-        </div>
-        
-        <div class="panel-usuario" id="panel-usuario-info" style="display: none;">
-            <p>✅ Conectado como: <strong id="nombre-usuario"></strong></p>
-            <button class="btn-publicar" onclick="window.location.href='/publicar'">📢 Publicar anuncio</button>
-            <button class="btn-logout" onclick="logout()">🚪 Cerrar sesión</button>
-        </div>
-        
-        <!-- Filtros -->
-        <div class="filtros">
-            <input type="text" id="filtro-buscar" placeholder="🔍 Buscar...">
-            <select id="filtro-tipo">
-                <option value="">📋 Todos</option>
-                <option value="producto">🛍️ Productos</option>
-                <option value="servicio">🔧 Servicios</option>
-                <option value="local">🏪 Locales</option>
-            </select>
-            <input type="text" id="filtro-ubicacion" placeholder="📍 Ubicación">
-            <input type="number" id="filtro-precio-min" placeholder="Precio mín" step="1000">
-            <input type="number" id="filtro-precio-max" placeholder="Precio máx" step="1000">
-            <button onclick="aplicarFiltros()">🔍 Buscar</button>
-            <button onclick="limpiarFiltros()" style="background: #6c757d;">🗑️ Limpiar</button>
-        </div>
-        
-        <h2>📋 Últimos anuncios</h2>
-        <div class="grid" id="lista-publicaciones">
-            Cargando...
-        </div>
-        
-        <footer>
-            <p>ServiMarket - Conectamos compradores y vendedores</p>
-            <p>Usuario demo: demo@ejemplo.com / 123456</p>
-        </footer>
+<div class="container">
+    <div class="header"><h1>ServiMarket</h1><p>Compra y vende productos, servicios y locales cerca tuyo</p></div>
+    
+    <div class="panel-usuario" id="panel-login">
+        <h3>Accede a tu cuenta</h3>
+        <input type="email" id="login-email" placeholder="Email">
+        <input type="text" id="login-nombre" placeholder="Nombre (registro)">
+        <input type="password" id="login-password" placeholder="Contraseña">
+        <button class="btn-registro" onclick="registrar()">Registrarse</button>
+        <button class="btn-login" onclick="login()">Iniciar sesion</button>
     </div>
+    
+    <div class="panel-usuario" id="panel-usuario-info" style="display:none">
+        <p>Conectado como: <strong id="nombre-usuario"></strong></p>
+        <button class="btn-publicar" onclick="window.location.href='/publicar'">Publicar anuncio</button>
+        <button class="btn-logout" onclick="logout()">Cerrar sesion</button>
+    </div>
+    
+    <div class="filtros">
+        <input type="text" id="filtro-buscar" placeholder="Buscar...">
+        <select id="filtro-tipo"><option value="">Todos</option><option value="producto">Productos</option><option value="servicio">Servicios</option><option value="local">Locales</option></select>
+        <input type="text" id="filtro-ubicacion" placeholder="Ubicacion">
+        <input type="number" id="filtro-precio-min" placeholder="Precio min">
+        <input type="number" id="filtro-precio-max" placeholder="Precio max">
+        <button onclick="aplicarFiltros()">Buscar</button>
+        <button onclick="limpiarFiltros()">Limpiar</button>
+    </div>
+    
+    <h2>Ultimos anuncios</h2>
+    <div class="grid" id="lista-publicaciones">Cargando...</div>
+    
+    <footer><p>ServiMarket - Conectamos compradores y vendedores</p><p>Usuario demo: demo@ejemplo.com / 123456</p></footer>
+</div>
 
-    <script>
-        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? 'http://localhost:5000'
-            : 'https://servimarket.onrender.com';
-        
-        let usuarioActual = null;
-        
-        async function registrar() {
-            const email = document.getElementById('login-email').value;
-            const nombre = document.getElementById('login-nombre').value;
-            const password = document.getElementById('login-password').value;
-            
-            try {
-                const res = await fetch(`${API_URL}/api/registro`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, nombre, password })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    alert('Registro exitoso');
-                    login();
-                } else {
-                    alert(data.error);
-                }
-            } catch(e) { alert('Error de conexión'); }
-        }
-        
-        async function login() {
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            
-            try {
-                const res = await fetch(`${API_URL}/api/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    usuarioActual = data;
-                    document.getElementById('panel-login').style.display = 'none';
-                    document.getElementById('panel-usuario-info').style.display = 'block';
-                    document.getElementById('nombre-usuario').innerText = data.nombre;
-                    cargarPublicaciones();
-                } else {
-                    alert(data.error);
-                }
-            } catch(e) { alert('Error de conexión'); }
-        }
-        
-        async function logout() {
-            await fetch(`${API_URL}/api/logout`, { method: 'POST' });
-            usuarioActual = null;
-            document.getElementById('panel-login').style.display = 'block';
-            document.getElementById('panel-usuario-info').style.display = 'none';
-            cargarPublicaciones();
-        }
-        
-        async function cargarPublicaciones() {
-            const buscar = document.getElementById('filtro-buscar')?.value || '';
-            const tipo = document.getElementById('filtro-tipo')?.value || '';
-            const ubicacion = document.getElementById('filtro-ubicacion')?.value || '';
-            const precioMin = document.getElementById('filtro-precio-min')?.value || '';
-            const precioMax = document.getElementById('filtro-precio-max')?.value || '';
-            
-            let url = `${API_URL}/api/publicaciones?`;
-            if (buscar) url += `q=${encodeURIComponent(buscar)}&`;
-            if (tipo) url += `tipo=${tipo}&`;
-            if (ubicacion) url += `ubicacion=${encodeURIComponent(ubicacion)}&`;
-            if (precioMin) url += `min_precio=${precioMin}&`;
-            if (precioMax) url += `max_precio=${precioMax}&`;
-            
-            try {
-                const res = await fetch(url);
-                const publicaciones = await res.json();
-                
-                const contenedor = document.getElementById('lista-publicaciones');
-                contenedor.innerHTML = '';
-                
-                if (publicaciones.length === 0) {
-                    contenedor.innerHTML = '<p style="text-align:center">No hay publicaciones. ¡Sé el primero!</p>';
-                    return;
-                }
-                
-                publicaciones.forEach(p => {
-                    let tipoClass = '';
-                    let tipoTexto = '';
-                    if (p.tipo === 'producto') { tipoClass = '#e3f2fd'; tipoTexto = '🛍️ Producto'; }
-                    else if (p.tipo === 'servicio') { tipoClass = '#e8f5e9'; tipoTexto = '🔧 Servicio'; }
-                    else { tipoClass = '#fff3e0'; tipoTexto = '🏪 Local'; }
-                    
-                    let botones = '';
-                    if (usuarioActual && p.usuario_id === usuarioActual.usuario_id) {
-                        botones = `<button class="btn-editar" onclick="abrirModalEditar(${p.id}, '${p.titulo.replace(/'/g, "\\'")}', '${p.descripcion.replace(/'/g, "\\'")}', ${p.precio || 0}, '${p.ubicacion || ''}', '${p.telefono_contacto || ''}')">✏️ Editar</button>
-                                    <button class="btn-eliminar" onclick="eliminarPublicacion(${p.id})">🗑️ Eliminar</button>`;
-                    }
-                    
-                    contenedor.innerHTML += `
-                        <div class="card">
-                            <div class="tipo-badge" style="background: ${tipoClass}">${tipoTexto}</div>
-                            <h3>${p.titulo}</h3>
-                            <p>${p.descripcion.substring(0, 100)}</p>
-                            ${p.precio ? `<div class="precio">$${p.precio.toLocaleString()}</div>` : ''}
-                            <div class="ubicacion">📍 ${p.ubicacion || 'Sin ubicación'}</div>
-                            <div class="contacto">
-                                👤 ${p.vendedor_nombre}<br>
-                                📞 ${p.telefono_contacto || 'Sin teléfono'}
-                            </div>
-                            ${botones}
-                        </div>
-                    `;
-                });
-            } catch(e) {
-                console.error(e);
-                document.getElementById('lista-publicaciones').innerHTML = '<p style="color:red">Error al conectar con el servidor</p>';
-            }
-        }
-        
-        async function eliminarPublicacion(id) {
-            if (!confirm('¿Eliminar esta publicación?')) return;
-            try {
-                const res = await fetch(`${API_URL}/api/publicaciones/${id}`, { method: 'DELETE' });
-                if (res.ok) cargarPublicaciones();
-                else alert('Error al eliminar');
-            } catch(e) { alert('Error de conexión'); }
-        }
-        
-        function aplicarFiltros() {
-            cargarPublicaciones();
-        }
-        
-        function limpiarFiltros() {
-            document.getElementById('filtro-buscar').value = '';
-            document.getElementById('filtro-tipo').value = '';
-            document.getElementById('filtro-ubicacion').value = '';
-            document.getElementById('filtro-precio-min').value = '';
-            document.getElementById('filtro-precio-max').value = '';
-            cargarPublicaciones();
-        }
-
-        function abrirModalEditar(id, titulo, descripcion, precio, ubicacion, telefono) {
-            document.getElementById('editar-id').value = id;
-            document.getElementById('editar-titulo').value = titulo;
-            document.getElementById('editar-descripcion').value = descripcion;
-            document.getElementById('editar-precio').value = precio;
-            document.getElementById('editar-ubicacion').value = ubicacion;
-            document.getElementById('editar-telefono').value = telefono;
-            document.getElementById('modal-editar').style.display = 'flex';
-        }
-
-        function cerrarModalEditar() {
-            document.getElementById('modal-editar').style.display = 'none';
-        }
-
-        async function guardarEdicion() {
-            const id = document.getElementById('editar-id').value;
-            const titulo = document.getElementById('editar-titulo').value;
-            const descripcion = document.getElementById('editar-descripcion').value;
-            const precio = parseFloat(document.getElementById('editar-precio').value) || null;
-            const ubicacion = document.getElementById('editar-ubicacion').value;
-            const telefono_contacto = document.getElementById('editar-telefono').value;
-            
-            if (!titulo || !descripcion) {
-                alert('Completa título y descripción');
-                return;
-            }
-            
-            try {
-                const res = await fetch(`${API_URL}/api/publicaciones/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ titulo, descripcion, precio, ubicacion, telefono_contacto })
-                });
-                
-                if (res.ok) {
-                    alert('✅ Publicación actualizada');
-                    cerrarModalEditar();
-                    cargarPublicaciones();
-                } else {
-                    const data = await res.json();
-                    alert(data.error || 'Error al actualizar');
-                }
-            } catch(e) {
-                alert('Error de conexión');
-            }
-        }
-        
-        async function cargarUsuarioActual() {
-            try {
-                const res = await fetch(`${API_URL}/api/usuario/actual`);
-                if (res.ok) {
-                    usuarioActual = await res.json();
-                    document.getElementById('panel-login').style.display = 'none';
-                    document.getElementById('panel-usuario-info').style.display = 'block';
-                    document.getElementById('nombre-usuario').innerText = usuarioActual.nombre;
-                }
-                cargarPublicaciones();
-            } catch(e) { cargarPublicaciones(); }
-        }
-        
-        cargarUsuarioActual();
-    </script>
-    <!-- Modal para editar -->
-    <div id="modal-editar" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
-        <div style="background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px;">
-            <h3>✏️ Editar publicación</h3>
-            <input type="hidden" id="editar-id">
-            <input type="text" id="editar-titulo" placeholder="Título" style="width: 100%; padding: 10px; margin: 10px 0;">
-            <textarea id="editar-descripcion" placeholder="Descripción" rows="3" style="width: 100%; padding: 10px; margin: 10px 0;"></textarea>
-            <input type="number" id="editar-precio" placeholder="Precio" style="width: 100%; padding: 10px; margin: 10px 0;">
-            <input type="text" id="editar-ubicacion" placeholder="Ubicación" style="width: 100%; padding: 10px; margin: 10px 0;">
-            <input type="text" id="editar-telefono" placeholder="Teléfono" style="width: 100%; padding: 10px; margin: 10px 0;">
-            <div style="text-align: right;">
-                <button onclick="cerrarModalEditar()" style="background: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin-right: 10px;">Cancelar</button>
-                <button onclick="guardarEdicion()" style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px;">Guardar</button>
-            </div>
+<div id="modal-editar" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);justify-content:center;align-items:center">
+    <div style="background:#fff;padding:30px;border-radius:15px;width:90%;max-width:500px">
+        <h3>Editar publicacion</h3>
+        <input type="hidden" id="editar-id">
+        <input type="text" id="editar-titulo" placeholder="Titulo" style="width:100%;padding:10px;margin:10px 0">
+        <textarea id="editar-descripcion" placeholder="Descripcion" rows="3" style="width:100%;padding:10px;margin:10px 0"></textarea>
+        <input type="number" id="editar-precio" placeholder="Precio" style="width:100%;padding:10px;margin:10px 0">
+        <input type="text" id="editar-ubicacion" placeholder="Ubicacion" style="width:100%;padding:10px;margin:10px 0">
+        <input type="text" id="editar-telefono" placeholder="Telefono" style="width:100%;padding:10px;margin:10px 0">
+        <div style="text-align:right">
+            <button onclick="cerrarModalEditar()">Cancelar</button>
+            <button onclick="guardarEdicion()">Guardar</button>
         </div>
     </div>
+</div>
+
+<script>
+const API_URL = 'https://servimarket.onrender.com';
+let usuarioActual = null;
+
+async function registrar(){
+    const email=document.getElementById('login-email').value;
+    const nombre=document.getElementById('login-nombre').value;
+    const password=document.getElementById('login-password').value;
+    try{
+        const res=await fetch(`${API_URL}/api/registro`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,nombre,password})});
+        const data=await res.json();
+        if(res.ok){alert('Registro exitoso');login();}
+        else alert(data.error);
+    }catch(e){alert('Error de conexion');}
+}
+
+async function login(){
+    const email=document.getElementById('login-email').value;
+    const password=document.getElementById('login-password').value;
+    try{
+        const res=await fetch(`${API_URL}/api/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+        const data=await res.json();
+        if(res.ok){
+            usuarioActual=data;
+            document.getElementById('panel-login').style.display='none';
+            document.getElementById('panel-usuario-info').style.display='block';
+            document.getElementById('nombre-usuario').innerText=data.nombre;
+            cargarPublicaciones();
+        }else alert(data.error);
+    }catch(e){alert('Error de conexion');}
+}
+
+async function logout(){
+    await fetch(`${API_URL}/api/logout`,{method:'POST'});
+    usuarioActual=null;
+    document.getElementById('panel-login').style.display='block';
+    document.getElementById('panel-usuario-info').style.display='none';
+    cargarPublicaciones();
+}
+
+async function cargarPublicaciones(){
+    const buscar=document.getElementById('filtro-buscar')?.value||'';
+    const tipo=document.getElementById('filtro-tipo')?.value||'';
+    const ubicacion=document.getElementById('filtro-ubicacion')?.value||'';
+    const precioMin=document.getElementById('filtro-precio-min')?.value||'';
+    const precioMax=document.getElementById('filtro-precio-max')?.value||'';
+    let url=`${API_URL}/api/publicaciones?`;
+    if(buscar) url+=`q=${encodeURIComponent(buscar)}&`;
+    if(tipo) url+=`tipo=${tipo}&`;
+    if(ubicacion) url+=`ubicacion=${encodeURIComponent(ubicacion)}&`;
+    if(precioMin) url+=`min_precio=${precioMin}&`;
+    if(precioMax) url+=`max_precio=${precioMax}&`;
+    try{
+        const res=await fetch(url);
+        const pubs=await res.json();
+        const cont=document.getElementById('lista-publicaciones');
+        cont.innerHTML='';
+        if(pubs.length===0){cont.innerHTML='<p>No hay publicaciones.</p>';return;}
+        pubs.forEach(p=>{
+            let tipoClass='',tipoTexto='';
+            if(p.tipo==='producto'){tipoClass='#e3f2fd';tipoTexto='Producto';}
+            else if(p.tipo==='servicio'){tipoClass='#e8f5e9';tipoTexto='Servicio';}
+            else{tipoClass='#fff3e0';tipoTexto='Local';}
+            let botones='';
+            if(usuarioActual && p.usuario_id===usuarioActual.usuario_id){
+                botones=`<button class="btn-editar" onclick='abrirModalEditar(${p.id}, "${p.titulo}", "${p.descripcion}", ${p.precio||0}, "${p.ubicacion||''}", "${p.telefono_contacto||''}")'>Editar</button>
+                         <button class="btn-eliminar" onclick="eliminarPublicacion(${p.id})">Eliminar</button>`;
+            }
+            cont.innerHTML+=`<div class="card"><div class="tipo-badge" style="background:${tipoClass}">${tipoTexto}</div><h3>${p.titulo}</h3><p>${p.descripcion.substring(0,100)}</p>${p.precio?`<div class="precio">$${p.precio}</div>`:''}<div class="ubicacion">${p.ubicacion||'Sin ubicacion'}</div><div class="contacto">${p.vendedor_nombre}<br>${p.telefono_contacto||'Sin telefono'}</div>${botones}</div>`;
+        });
+    }catch(e){document.getElementById('lista-publicaciones').innerHTML='<p>Error de conexion</p>';}
+}
+
+async function eliminarPublicacion(id){
+    if(!confirm('Eliminar?')) return;
+    try{
+        const res=await fetch(`${API_URL}/api/publicaciones/${id}`,{method:'DELETE'});
+        if(res.ok) cargarPublicaciones();
+        else alert('Error');
+    }catch(e){alert('Error');}
+}
+
+function aplicarFiltros(){cargarPublicaciones();}
+function limpiarFiltros(){
+    document.getElementById('filtro-buscar').value='';
+    document.getElementById('filtro-tipo').value='';
+    document.getElementById('filtro-ubicacion').value='';
+    document.getElementById('filtro-precio-min').value='';
+    document.getElementById('filtro-precio-max').value='';
+    cargarPublicaciones();
+}
+
+function abrirModalEditar(id,titulo,descripcion,precio,ubicacion,telefono){
+    document.getElementById('editar-id').value=id;
+    document.getElementById('editar-titulo').value=titulo;
+    document.getElementById('editar-descripcion').value=descripcion;
+    document.getElementById('editar-precio').value=precio;
+    document.getElementById('editar-ubicacion').value=ubicacion;
+    document.getElementById('editar-telefono').value=telefono;
+    document.getElementById('modal-editar').style.display='flex';
+}
+
+function cerrarModalEditar(){document.getElementById('modal-editar').style.display='none';}
+
+async function guardarEdicion(){
+    const id=document.getElementById('editar-id').value;
+    const titulo=document.getElementById('editar-titulo').value;
+    const descripcion=document.getElementById('editar-descripcion').value;
+    const precio=parseFloat(document.getElementById('editar-precio').value)||null;
+    const ubicacion=document.getElementById('editar-ubicacion').value;
+    const telefono_contacto=document.getElementById('editar-telefono').value;
+    if(!titulo||!descripcion){alert('Completa titulo y descripcion');return;}
+    try{
+        const res=await fetch(`${API_URL}/api/publicaciones/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({titulo,descripcion,precio,ubicacion,telefono_contacto})});
+        if(res.ok){
+            alert('Actualizada');
+            cerrarModalEditar();
+            cargarPublicaciones();
+        }else alert('Error al actualizar');
+    }catch(e){alert('Error de conexion');}
+}
+
+async function cargarUsuarioActual(){
+    try{
+        const res=await fetch(`${API_URL}/api/usuario/actual`);
+        if(res.ok){
+            usuarioActual=await res.json();
+            document.getElementById('panel-login').style.display='none';
+            document.getElementById('panel-usuario-info').style.display='block';
+            document.getElementById('nombre-usuario').innerText=usuarioActual.nombre;
+        }
+        cargarPublicaciones();
+    }catch(e){cargarPublicaciones();}
+}
+cargarUsuarioActual();
+</script>
 </body>
 </html>
