@@ -1,14 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>ServiMarket - Compra y Vende Servicios</title>
+    <title>ServiMarket - Publicá lo que vendés</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            padding: 20px;
-        }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
         .container { max-width: 1200px; margin: 0 auto; }
         
         .header {
@@ -20,50 +16,31 @@
             text-align: center;
         }
         
-        /* Panel de usuario */
         .panel-usuario {
             background: white;
             padding: 20px;
             border-radius: 15px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .panel-usuario h3 { margin-bottom: 15px; color: #333; }
-        .panel-usuario input {
-            padding: 10px;
-            margin-right: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        .panel-usuario button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-right: 10px;
-        }
-        .btn-registro { background: #667eea; color: white; }
-        .btn-login { background: #28a745; color: white; }
-        .btn-logout { background: #dc3545; color: white; }
         
         .form-publicar {
             background: white;
             padding: 25px;
             border-radius: 15px;
             margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
         }
-        .form-publicar h2 { margin-bottom: 15px; color: #333; }
-        .form-publicar input, .form-publicar textarea {
+        
+        .form-publicar input, .form-publicar textarea, .form-publicar select {
             width: 100%;
             padding: 10px;
             margin-bottom: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
         }
+        
         .form-publicar button {
-            background: #667eea;
+            background: #28a745;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -71,27 +48,31 @@
             cursor: pointer;
         }
         
-        .servicios-grid {
+        .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 20px;
         }
-        .servicio-card {
+        
+        .card {
             background: white;
             border-radius: 15px;
             padding: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
         }
-        .servicio-card:hover { transform: translateY(-5px); }
-        .servicio-titulo { color: #333; margin-bottom: 10px; }
-        .servicio-descripcion { color: #666; margin-bottom: 15px; }
-        .servicio-precio { 
-            font-size: 24px; 
-            color: #28a745; 
-            font-weight: bold;
+        
+        .tipo-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            margin-bottom: 10px;
         }
-        .servicio-vendedor { color: #888; font-size: 12px; margin: 10px 0; }
+        
+        .precio { font-size: 20px; font-weight: bold; color: #28a745; margin: 10px 0; }
+        .ubicacion { color: #666; font-size: 12px; margin: 5px 0; }
+        .contacto { font-size: 12px; color: #888; margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; }
+        
         .btn-eliminar {
             background: #dc3545;
             color: white;
@@ -99,392 +80,236 @@
             padding: 5px 10px;
             border-radius: 5px;
             cursor: pointer;
+            margin-top: 10px;
         }
-        .btn-editar {
-            background: #ffc107;
-            color: #333;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-right: 5px;
-        }
-.btn-editar:hover { background: #e0a800; }
-        .propio { border-left: 4px solid #28a745; }
         
-        .premium-badge {
-            background: #ffc107;
-            color: #333;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            display: inline-block;
-        }
+        button { cursor: pointer; }
+        .btn-logout { background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; }
+        .btn-registro { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 5px; }
+        .btn-login { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; }
+        
+        input, select { padding: 10px; margin: 5px; border: 1px solid #ddd; border-radius: 5px; }
         
         footer { text-align: center; margin-top: 30px; padding: 20px; color: #888; }
-        .error { color: red; margin-top: 10px; }
-        .exito { color: green; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚀 ServiMarket</h1>
-            <p>Compra y vende servicios profesionales</p>
-            <div class="premium-badge" id="estado-membresia">🎁 Modo Gratuito</div>
+            <h1>🛒 ServiMarket</h1>
+            <p>Comprá y vendé productos, servicios y locales cerca tuyo</p>
         </div>
         
-        <!-- Panel de usuario -->
+        <!-- Panel login -->
         <div class="panel-usuario" id="panel-login">
             <h3>🔐 Accede a tu cuenta</h3>
-            <input type="email" id="login-email" placeholder="Email" style="width: 200px;">
-            <input type="text" id="login-nombre" placeholder="Nombre (para registro)" style="width: 200px;">
-            <input type="password" id="login-password" placeholder="Contraseña" style="width: 200px;">
-            <br>
-            <button class="btn-registro" onclick="registrar()">📝 Registrarse</button>
-            <button class="btn-login" onclick="login()">🔑 Iniciar sesión</button>
+            <input type="email" id="login-email" placeholder="Email">
+            <input type="text" id="login-nombre" placeholder="Nombre (registro)">
+            <input type="password" id="login-password" placeholder="Contraseña">
+            <button class="btn-registro" onclick="registrar()">Registrarse</button>
+            <button class="btn-login" onclick="login()">Iniciar sesión</button>
             <div id="login-mensaje"></div>
         </div>
         
         <div class="panel-usuario" id="panel-usuario-info" style="display: none;">
-            <p>✅ Conectado como: <strong id="nombre-usuario"></strong> (<span id="email-usuario"></span>)</p>
-            <p id="premium-info"></p>
-            <button class="btn-logout" onclick="logout()">🚪 Cerrar sesión</button>
+            <p>✅ Conectado como: <strong id="nombre-usuario"></strong></p>
+            <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
         </div>
         
-        <!-- Formulario para publicar (solo visible para usuarios logueados) -->
-        <div class="form-publicar" id="form-publicar" style="display: none;">
-            <h2>📢 Publicar un servicio</h2>
-            <input type="text" id="titulo" placeholder="Título del servicio" required>
-            <textarea id="descripcion" placeholder="Descripción del servicio" rows="3"></textarea>
-            <input type="number" id="precio" placeholder="Precio en USD" required>
-            <button onclick="publicarServicio()">Publicar servicio</button>
-            <div id="publicar-mensaje"></div>
+        <!-- Formulario publicar -->
+        <div class="form-publicar" id="form-publicar">
+            <h2>📢 Publicar anuncio</h2>
+            <select id="pub-tipo">
+                <option value="producto">🛍️ Producto</option>
+                <option value="servicio">🔧 Servicio</option>
+                <option value="local">🏪 Local</option>
+            </select>
+            <input type="text" id="pub-titulo" placeholder="Título">
+            <textarea id="pub-descripcion" placeholder="Descripción" rows="3"></textarea>
+            <input type="number" id="pub-precio" placeholder="Precio (opcional)">
+            <input type="text" id="pub-ubicacion" placeholder="Ubicación (ciudad/barrio)">
+            <input type="text" id="pub-telefono" placeholder="Teléfono de contacto">
+            <button onclick="publicarPublicacion()">Publicar anuncio</button>
         </div>
         
-        <h2>📋 Todos los servicios</h2>
-        <div class="servicios-grid" id="lista-servicios">
-            Cargando servicios...
+        <h2>📋 Últimos anuncios</h2>
+        <div class="grid" id="lista-publicaciones">
+            Cargando...
         </div>
-            <div style="margin-top: 15px;">
-                <a href="dashboard.html" style="background: rgba(255,255,255,0.2); color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; margin: 0 5px; display: inline-block;">📊 Dashboard Analytics</a>
-        </div>
+        
         <footer>
-            <p>ServiMarket - Conectando profesionales y clientes</p>
+            <p>ServiMarket - Conectamos compradores y vendedores</p>
             <p>Usuario demo: demo@ejemplo.com / 123456</p>
         </footer>
     </div>
 
     <script>
         const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:5000'
-        : 'https://servimarket.onrender.com';
-        let usuarioActual = null;
+            ? 'http://localhost:5000'
+            : 'https://servimarket.onrender.com';
         
-        // ========== FUNCIONES DE USUARIO ==========
+        let usuarioActual = null;
         
         async function registrar() {
             const email = document.getElementById('login-email').value;
             const nombre = document.getElementById('login-nombre').value;
             const password = document.getElementById('login-password').value;
             
-            const mensajeDiv = document.getElementById('login-mensaje');
-            
-            if (!email || !nombre || !password) {
-                mensajeDiv.innerHTML = '<p class="error">Completa todos los campos</p>';
-                return;
-            }
-            
             try {
-                const respuesta = await fetch(`${API_URL}/api/registro`, {
+                const res = await fetch(`${API_URL}/api/registro`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, nombre, password })
                 });
-                
-                const data = await respuesta.json();
-                
-                if (respuesta.ok) {
-                    mensajeDiv.innerHTML = '<p class="exito">Registro exitoso. ¡Bienvenido!</p>';
-                    await cargarUsuarioActual();
+                const data = await res.json();
+                if (res.ok) {
+                    alert('Registro exitoso');
+                    login();
                 } else {
-                    mensajeDiv.innerHTML = `<p class="error">${data.error}</p>`;
+                    alert(data.error);
                 }
-            } catch (error) {
-                mensajeDiv.innerHTML = '<p class="error">Error de conexión</p>';
-            }
+            } catch(e) { alert('Error de conexión'); }
         }
         
         async function login() {
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
             
-            const mensajeDiv = document.getElementById('login-mensaje');
-            
-            if (!email || !password) {
-                mensajeDiv.innerHTML = '<p class="error">Email y contraseña requeridos</p>';
-                return;
-            }
-            
             try {
-                const respuesta = await fetch(`${API_URL}/api/login`, {
+                const res = await fetch(`${API_URL}/api/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
-                
-                const data = await respuesta.json();
-                
-                if (respuesta.ok) {
-                    mensajeDiv.innerHTML = '<p class="exito">Login exitoso</p>';
-                    await cargarUsuarioActual();
+                const data = await res.json();
+                if (res.ok) {
+                    usuarioActual = data;
+                    document.getElementById('panel-login').style.display = 'none';
+                    document.getElementById('panel-usuario-info').style.display = 'block';
+                    document.getElementById('form-publicar').style.display = 'block';
+                    document.getElementById('nombre-usuario').innerText = data.nombre;
+                    cargarPublicaciones();
                 } else {
-                    mensajeDiv.innerHTML = `<p class="error">${data.error}</p>`;
+                    alert(data.error);
                 }
-            } catch (error) {
-                mensajeDiv.innerHTML = '<p class="error">Error de conexión</p>';
-            }
+            } catch(e) { alert('Error de conexión'); }
         }
         
         async function logout() {
-            try {
-                await fetch(`${API_URL}/api/logout`, { method: 'POST' });
-                usuarioActual = null;
-                actualizarInterfazUsuario();
-                cargarServicios();
-                
-                document.getElementById('login-email').value = '';
-                document.getElementById('login-nombre').value = '';
-                document.getElementById('login-password').value = '';
-                document.getElementById('login-mensaje').innerHTML = '';
-                
-            } catch (error) {
-                console.error('Error al cerrar sesión:', error);
+            await fetch(`${API_URL}/api/logout`, { method: 'POST' });
+            usuarioActual = null;
+            document.getElementById('panel-login').style.display = 'block';
+            document.getElementById('panel-usuario-info').style.display = 'none';
+            document.getElementById('form-publicar').style.display = 'none';
+            cargarPublicaciones();
+        }
+        
+        async function publicarPublicacion() {
+            if (!usuarioActual) {
+                alert('Inicia sesión para publicar');
+                return;
             }
+            
+            const publicacion = {
+                tipo: document.getElementById('pub-tipo').value,
+                titulo: document.getElementById('pub-titulo').value,
+                descripcion: document.getElementById('pub-descripcion').value,
+                precio: parseFloat(document.getElementById('pub-precio').value) || null,
+                ubicacion: document.getElementById('pub-ubicacion').value,
+                telefono_contacto: document.getElementById('pub-telefono').value
+            };
+            
+            try {
+                const res = await fetch(`${API_URL}/api/publicaciones`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(publicacion)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert('Publicación creada');
+                    document.getElementById('pub-titulo').value = '';
+                    document.getElementById('pub-descripcion').value = '';
+                    document.getElementById('pub-precio').value = '';
+                    document.getElementById('pub-ubicacion').value = '';
+                    document.getElementById('pub-telefono').value = '';
+                    cargarPublicaciones();
+                } else {
+                    alert(data.error);
+                }
+            } catch(e) { alert('Error de conexión'); }
+        }
+        
+        async function cargarPublicaciones() {
+            try {
+                const res = await fetch(`${API_URL}/api/publicaciones`);
+                const publicaciones = await res.json();
+                
+                const contenedor = document.getElementById('lista-publicaciones');
+                contenedor.innerHTML = '';
+                
+                if (publicaciones.length === 0) {
+                    contenedor.innerHTML = '<p style="text-align:center">No hay publicaciones aún. ¡Sé el primero en publicar!</p>';
+                    return;
+                }
+                
+                publicaciones.forEach(p => {
+                    let tipoClass = '';
+                    let tipoTexto = '';
+                    if (p.tipo === 'producto') { tipoClass = '#e3f2fd'; tipoTexto = '🛍️ Producto'; }
+                    else if (p.tipo === 'servicio') { tipoClass = '#e8f5e9'; tipoTexto = '🔧 Servicio'; }
+                    else { tipoClass = '#fff3e0'; tipoTexto = '🏪 Local'; }
+                    
+                    let botones = '';
+                    if (usuarioActual && p.usuario_id === usuarioActual.usuario_id) {
+                        botones = `<button class="btn-eliminar" onclick="eliminarPublicacion(${p.id})">🗑️ Eliminar</button>`;
+                    }
+                    
+                    contenedor.innerHTML += `
+                        <div class="card">
+                            <div class="tipo-badge" style="background: ${tipoClass}">${tipoTexto}</div>
+                            <h3>${p.titulo}</h3>
+                            <p>${p.descripcion.substring(0, 100)}...</p>
+                            ${p.precio ? `<div class="precio">$${p.precio.toLocaleString()}</div>` : ''}
+                            <div class="ubicacion">📍 ${p.ubicacion || 'Sin ubicación'}</div>
+                            <div class="contacto">
+                                👤 ${p.vendedor_nombre}<br>
+                                📞 ${p.telefono_contacto || 'Sin teléfono'}
+                            </div>
+                            ${botones}
+                        </div>
+                    `;
+                });
+            } catch(e) {
+                console.error(e);
+                document.getElementById('lista-publicaciones').innerHTML = '<p style="color:red">Error al conectar con el servidor</p>';
+            }
+        }
+        
+        async function eliminarPublicacion(id) {
+            if (!confirm('¿Eliminar esta publicación?')) return;
+            try {
+                const res = await fetch(`${API_URL}/api/publicaciones/${id}`, { method: 'DELETE' });
+                if (res.ok) cargarPublicaciones();
+                else alert('Error al eliminar');
+            } catch(e) { alert('Error de conexión'); }
         }
         
         async function cargarUsuarioActual() {
             try {
-                const respuesta = await fetch(`${API_URL}/api/usuario/actual`);
-                if (respuesta.ok) {
-                    usuarioActual = await respuesta.json();
-                } else {
-                    usuarioActual = null;
+                const res = await fetch(`${API_URL}/api/usuario/actual`);
+                if (res.ok) {
+                    usuarioActual = await res.json();
+                    document.getElementById('panel-login').style.display = 'none';
+                    document.getElementById('panel-usuario-info').style.display = 'block';
+                    document.getElementById('form-publicar').style.display = 'block';
+                    document.getElementById('nombre-usuario').innerText = usuarioActual.nombre;
                 }
-                actualizarInterfazUsuario();
-                cargarServicios();
-            } catch (error) {
-                usuarioActual = null;
-                actualizarInterfazUsuario();
-            }
+                cargarPublicaciones();
+            } catch(e) { cargarPublicaciones(); }
         }
         
-        function actualizarInterfazUsuario() {
-            const panelLogin = document.getElementById('panel-login');
-            const panelInfo = document.getElementById('panel-usuario-info');
-            const formPublicar = document.getElementById('form-publicar');
-            
-            if (usuarioActual) {
-                panelLogin.style.display = 'none';
-                panelInfo.style.display = 'block';
-                formPublicar.style.display = 'block';
-                
-                document.getElementById('nombre-usuario').innerText = usuarioActual.nombre;
-                document.getElementById('email-usuario').innerText = usuarioActual.email;
-                
-                const premiumInfo = document.getElementById('premium-info');
-                if (usuarioActual.es_premium) {
-                    premiumInfo.innerHTML = '🏆 Usuario PREMIUM';
-                } else {
-                    premiumInfo.innerHTML = '⭐ Usuario gratuito';
-                }
-            } else {
-                panelLogin.style.display = 'block';
-                panelInfo.style.display = 'none';
-                formPublicar.style.display = 'none';
-            }
-        }
-        
-        // ========== FUNCIONES DE SERVICIOS ==========
-        
-        async function cargarServicios() {
-            try {
-                const respuesta = await fetch(`${API_URL}/api/servicios`);
-                const servicios = await respuesta.json();
-                
-                const contenedor = document.getElementById('lista-servicios');
-                contenedor.innerHTML = '';
-                
-                if (servicios.length === 0) {
-                    contenedor.innerHTML = '<p style="text-align:center">No hay servicios aún. ¡Inicia sesión y publica el primero!</p>';
-                    return;
-                }
-                
-                servicios.forEach(servicio => {
-                    const esPropio = usuarioActual && servicio.vendedor_id === usuarioActual.usuario_id;
-                    const clasePropio = esPropio ? 'propio' : '';
-                    
-                    let botones = '';
-                    if (esPropio) {
-                        botones = `
-                            <button class="btn-editar" onclick="abrirModalEditar(${servicio.id}, '${servicio.titulo.replace(/'/g, "\\'")}', '${servicio.descripcion.replace(/'/g, "\\'")}', ${servicio.precio})">✏️ Editar</button>
-                            <button class="btn-eliminar" onclick="eliminarServicio(${servicio.id})">🗑️ Eliminar</button>
-                        `;
-                    }
-                    
-                    contenedor.innerHTML += `
-                        <div class="servicio-card ${clasePropio}">
-                            <h3 class="servicio-titulo">${servicio.titulo}</h3>
-                            <p class="servicio-descripcion">${servicio.descripcion}</p>
-                            <div class="servicio-precio">$${servicio.precio}</div>
-                            <div class="servicio-vendedor">👤 ${servicio.vendedor_nombre}</div>
-                            <div style="margin-top: 10px;">${botones}</div>
-                        </div>
-                    `;
-                });
-            } catch (error) {
-                console.error('Error:', error);
-                document.getElementById('lista-servicios').innerHTML = 
-                    '<p style="color:red">Error al conectar con el servidor. ¿Está ejecutando "py app.py"?</p>';
-            }
-        }
-        
-        async function publicarServicio() {
-            if (!usuarioActual) {
-                alert('Debes iniciar sesión para publicar');
-                return;
-            }
-            
-            const titulo = document.getElementById('titulo').value;
-            const descripcion = document.getElementById('descripcion').value;
-            const precio = parseFloat(document.getElementById('precio').value);
-            
-            if (!titulo || !descripcion || !precio) {
-                alert('Completa todos los campos');
-                return;
-            }
-            
-            const mensajeDiv = document.getElementById('publicar-mensaje');
-            
-            try {
-                const respuesta = await fetch(`${API_URL}/api/servicios`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ titulo, descripcion, precio })
-                });
-                
-                const data = await respuesta.json();
-                
-                if (respuesta.ok) {
-                    mensajeDiv.innerHTML = '<p class="exito">¡Servicio publicado con éxito!</p>';
-                    document.getElementById('titulo').value = '';
-                    document.getElementById('descripcion').value = '';
-                    document.getElementById('precio').value = '';
-                    cargarServicios();
-                    
-                    setTimeout(() => { mensajeDiv.innerHTML = ''; }, 3000);
-                } else {
-                    mensajeDiv.innerHTML = `<p class="error">${data.error || 'Error al publicar'}</p>`;
-                }
-            } catch (error) {
-                mensajeDiv.innerHTML = '<p class="error">Error de conexión</p>';
-            }
-        }
-        
-        async function eliminarServicio(id) {
-            if (!confirm('¿Eliminar este servicio?')) return;
-            
-            try {
-                const respuesta = await fetch(`${API_URL}/api/servicios/${id}`, {
-                    method: 'DELETE'
-                });
-                
-                const data = await respuesta.json();
-                
-                if (respuesta.ok) {
-                    cargarServicios();
-                } else {
-                    alert(data.error || 'Error al eliminar');
-                }
-            } catch (error) {
-                alert('Error de conexión');
-            }
-        }
-        
-        async function cargarEstadoMembresia() {
-            try {
-                const respuesta = await fetch(`${API_URL}/api/membresia/estado`);
-                const data = await respuesta.json();
-                if (data.modo_gratuito) {
-                    document.getElementById('estado-membresia').innerHTML = '🎁 GRATIS - Regístrate y publica';
-                }
-            } catch (error) {
-                console.log('No se pudo cargar estado');
-            }
-        }
-        
-
-                function abrirModalEditar(id, titulo, descripcion, precio) {
-            document.getElementById('editar-id').value = id;
-            document.getElementById('editar-titulo').value = titulo;
-            document.getElementById('editar-descripcion').value = descripcion;
-            document.getElementById('editar-precio').value = precio;
-            document.getElementById('modal-editar').style.display = 'flex';
-        }
-
-        function cerrarModalEditar() {
-            document.getElementById('modal-editar').style.display = 'none';
-        }
-
-        async function guardarEdicion() {
-            const id = document.getElementById('editar-id').value;
-            const titulo = document.getElementById('editar-titulo').value;
-            const descripcion = document.getElementById('editar-descripcion').value;
-            const precio = parseFloat(document.getElementById('editar-precio').value);
-            
-            if (!titulo || !descripcion || !precio) {
-                alert('Completa todos los campos');
-                return;
-            }
-            
-            try {
-                const respuesta = await fetch(`${API_URL}/api/servicios/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ titulo, descripcion, precio })
-                });
-                
-                const data = await respuesta.json();
-                
-                if (respuesta.ok) {
-                    alert('✅ Servicio actualizado correctamente');
-                    cerrarModalEditar();
-                    cargarServicios();
-                } else {
-                    alert(data.error || 'Error al actualizar');
-                }
-            } catch (error) {
-                alert('Error de conexión');
-            }
-        }
-    // ========== INICIALIZAR ==========
-        cargarEstadoMembresia();
         cargarUsuarioActual();
-        setInterval(cargarServicios, 5000);
     </script>
-    <!-- Modal para editar servicio -->
-    <div id="modal-editar" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
-        <div style="background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; margin: 20px;">
-            <h3>✏️ Editar servicio</h3>
-            <input type="hidden" id="editar-id">
-            <input type="text" id="editar-titulo" placeholder="Título" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
-            <textarea id="editar-descripcion" placeholder="Descripción" rows="3" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;"></textarea>
-            <input type="number" id="editar-precio" placeholder="Precio" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
-            <div style="text-align: right;">
-                <button onclick="cerrarModalEditar()" style="background: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin-right: 10px;">Cancelar</button>
-                <button onclick="guardarEdicion()" style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px;">Guardar</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>
