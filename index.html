@@ -33,6 +33,17 @@
             margin-right: 10px;
         }
         .btn-publicar:hover { background: #218838; }
+
+        .btn-editar {
+            background: #ffc107;
+            color: #333;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        .btn-editar:hover { background: #e0a800; }
         
         .filtros {
             background: white;
@@ -250,7 +261,10 @@
                     
                     let botones = '';
                     if (usuarioActual && p.usuario_id === usuarioActual.usuario_id) {
-                        botones = `<button class="btn-eliminar" onclick="eliminarPublicacion(${p.id})">🗑️ Eliminar</button>`;
+                        botones = `
+                            <button class="btn-editar" onclick="abrirModalEditar(${p.id}, '${p.titulo.replace(/'/g, "\\'")}', '${p.descripcion.replace(/'/g, "\\'")}', ${p.precio || 0}, '${p.ubicacion || ''}', '${p.telefono_contacto || ''}')">✏️ Editar</button>
+                            <button class="btn-eliminar" onclick="eliminarPublicacion(${p.id})">🗑️ Eliminar</button>
+                        `;
                     }
                     
                     contenedor.innerHTML += `
@@ -295,6 +309,53 @@
             document.getElementById('filtro-precio-max').value = '';
             cargarPublicaciones();
         }
+
+        function abrirModalEditar(id, titulo, descripcion, precio, ubicacion, telefono) {
+            document.getElementById('editar-id').value = id;
+            document.getElementById('editar-titulo').value = titulo;
+            document.getElementById('editar-descripcion').value = descripcion;
+            document.getElementById('editar-precio').value = precio;
+            document.getElementById('editar-ubicacion').value = ubicacion;
+            document.getElementById('editar-telefono').value = telefono;
+            document.getElementById('modal-editar').style.display = 'flex';
+        }
+
+        function cerrarModalEditar() {
+            document.getElementById('modal-editar').style.display = 'none';
+        }
+
+        async function guardarEdicion() {
+            const id = document.getElementById('editar-id').value;
+            const titulo = document.getElementById('editar-titulo').value;
+            const descripcion = document.getElementById('editar-descripcion').value;
+            const precio = parseFloat(document.getElementById('editar-precio').value) || null;
+            const ubicacion = document.getElementById('editar-ubicacion').value;
+            const telefono_contacto = document.getElementById('editar-telefono').value;
+            
+            if (!titulo || !descripcion) {
+                alert('Completa título y descripción');
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${API_URL}/api/publicaciones/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ titulo, descripcion, precio, ubicacion, telefono_contacto })
+                });
+                
+                if (res.ok) {
+                    alert('✅ Publicación actualizada');
+                    cerrarModalEditar();
+                    cargarPublicaciones();
+                } else {
+                    const data = await res.json();
+                    alert(data.error || 'Error al actualizar');
+                }
+            } catch(e) {
+                alert('Error de conexión');
+            }
+        }
         
         async function cargarUsuarioActual() {
             try {
@@ -311,5 +372,21 @@
         
         cargarUsuarioActual();
     </script>
+    <!-- Modal para editar -->
+    <div id="modal-editar" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px;">
+            <h3>✏️ Editar publicación</h3>
+            <input type="hidden" id="editar-id">
+            <input type="text" id="editar-titulo" placeholder="Título" style="width: 100%; padding: 10px; margin: 10px 0;">
+            <textarea id="editar-descripcion" placeholder="Descripción" rows="3" style="width: 100%; padding: 10px; margin: 10px 0;"></textarea>
+            <input type="number" id="editar-precio" placeholder="Precio" style="width: 100%; padding: 10px; margin: 10px 0;">
+            <input type="text" id="editar-ubicacion" placeholder="Ubicación" style="width: 100%; padding: 10px; margin: 10px 0;">
+            <input type="text" id="editar-telefono" placeholder="Teléfono" style="width: 100%; padding: 10px; margin: 10px 0;">
+            <div style="text-align: right;">
+                <button onclick="cerrarModalEditar()" style="background: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin-right: 10px;">Cancelar</button>
+                <button onclick="guardarEdicion()" style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px;">Guardar</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
