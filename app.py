@@ -416,6 +416,14 @@ def dashboard():
 def dashboard_html():
     return dashboard()
 
+@app.route('/publicar.html')
+def publicar():
+    try:
+        with open('publicar.html', 'r', encoding='utf-8') as f:
+            return f.read()
+    except:
+        return "Página no encontrada", 404
+
 @app.route('/<path:filename>')
 def servir_html(filename):
     # No interferir con las rutas de API
