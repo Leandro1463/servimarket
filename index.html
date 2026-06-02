@@ -23,6 +23,32 @@
             margin-bottom: 20px;
         }
         
+        .filtros {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .filtros input, .filtros select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            flex: 1;
+            min-width: 150px;
+        }
+        .filtros button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
         .form-publicar {
             background: white;
             padding: 25px;
@@ -30,7 +56,6 @@
             margin-bottom: 30px;
             display: none;
         }
-        
         .form-publicar input, .form-publicar textarea, .form-publicar select {
             width: 100%;
             padding: 10px;
@@ -38,7 +63,6 @@
             border: 1px solid #ddd;
             border-radius: 5px;
         }
-        
         .form-publicar button {
             background: #28a745;
             color: white;
@@ -114,6 +138,22 @@
         <div class="panel-usuario" id="panel-usuario-info" style="display: none;">
             <p>✅ Conectado como: <strong id="nombre-usuario"></strong></p>
             <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+        </div>
+        
+        <!-- Filtros -->
+        <div class="filtros">
+            <input type="text" id="filtro-buscar" placeholder="🔍 Buscar...">
+            <select id="filtro-tipo">
+                <option value="">📋 Todos</option>
+                <option value="producto">🛍️ Productos</option>
+                <option value="servicio">🔧 Servicios</option>
+                <option value="local">🏪 Locales</option>
+            </select>
+            <input type="text" id="filtro-ubicacion" placeholder="📍 Ubicación">
+            <input type="number" id="filtro-precio-min" placeholder="Precio mín" step="1000">
+            <input type="number" id="filtro-precio-max" placeholder="Precio máx" step="1000">
+            <button onclick="aplicarFiltros()">🔍 Buscar</button>
+            <button onclick="limpiarFiltros()" style="background: #6c757d;">🗑️ Limpiar</button>
         </div>
         
         <!-- Formulario publicar -->
@@ -241,15 +281,28 @@
         }
         
         async function cargarPublicaciones() {
+            const buscar = document.getElementById('filtro-buscar')?.value || '';
+            const tipo = document.getElementById('filtro-tipo')?.value || '';
+            const ubicacion = document.getElementById('filtro-ubicacion')?.value || '';
+            const precioMin = document.getElementById('filtro-precio-min')?.value || '';
+            const precioMax = document.getElementById('filtro-precio-max')?.value || '';
+            
+            let url = `${API_URL}/api/publicaciones?`;
+            if (buscar) url += `q=${encodeURIComponent(buscar)}&`;
+            if (tipo) url += `tipo=${tipo}&`;
+            if (ubicacion) url += `ubicacion=${encodeURIComponent(ubicacion)}&`;
+            if (precioMin) url += `min_precio=${precioMin}&`;
+            if (precioMax) url += `max_precio=${precioMax}&`;
+            
             try {
-                const res = await fetch(`${API_URL}/api/publicaciones`);
+                const res = await fetch(url);
                 const publicaciones = await res.json();
                 
                 const contenedor = document.getElementById('lista-publicaciones');
                 contenedor.innerHTML = '';
                 
                 if (publicaciones.length === 0) {
-                    contenedor.innerHTML = '<p style="text-align:center">No hay publicaciones aún. ¡Sé el primero en publicar!</p>';
+                    contenedor.innerHTML = '<p style="text-align:center">No hay publicaciones. ¡Sé el primero!</p>';
                     return;
                 }
                 
@@ -269,7 +322,7 @@
                         <div class="card">
                             <div class="tipo-badge" style="background: ${tipoClass}">${tipoTexto}</div>
                             <h3>${p.titulo}</h3>
-                            <p>${p.descripcion.substring(0, 100)}...</p>
+                            <p>${p.descripcion.substring(0, 100)}</p>
                             ${p.precio ? `<div class="precio">$${p.precio.toLocaleString()}</div>` : ''}
                             <div class="ubicacion">📍 ${p.ubicacion || 'Sin ubicación'}</div>
                             <div class="contacto">
@@ -293,6 +346,19 @@
                 if (res.ok) cargarPublicaciones();
                 else alert('Error al eliminar');
             } catch(e) { alert('Error de conexión'); }
+        }
+        
+        function aplicarFiltros() {
+            cargarPublicaciones();
+        }
+        
+        function limpiarFiltros() {
+            document.getElementById('filtro-buscar').value = '';
+            document.getElementById('filtro-tipo').value = '';
+            document.getElementById('filtro-ubicacion').value = '';
+            document.getElementById('filtro-precio-min').value = '';
+            document.getElementById('filtro-precio-max').value = '';
+            cargarPublicaciones();
         }
         
         async function cargarUsuarioActual() {
