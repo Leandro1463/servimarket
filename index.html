@@ -261,10 +261,8 @@
                     
                     let botones = '';
                     if (usuarioActual && p.usuario_id === usuarioActual.usuario_id) {
-                        botones = `
-                            <button class="btn-editar" onclick="abrirModalEditar(${p.id}, '${p.titulo.replace(/'/g, "\\'")}', '${p.descripcion.replace(/'/g, "\\'")}', ${p.precio || 0}, '${p.ubicacion || ''}', '${p.telefono_contacto || ''}')">✏️ Editar</button>
-                            <button class="btn-eliminar" onclick="eliminarPublicacion(${p.id})">🗑️ Eliminar</button>
-                        `;
+                        botones = `<button class="btn-editar" onclick="abrirModalEditar(${p.id}, '${p.titulo.replace(/'/g, "\\'")}', '${p.descripcion.replace(/'/g, "\\'")}', ${p.precio || 0}, '${p.ubicacion || ''}', '${p.telefono_contacto || ''}')">✏️ Editar</button>
+                                    <button class="btn-eliminar" onclick="eliminarPublicacion(${p.id})">🗑️ Eliminar</button>`;
                     }
                     
                     contenedor.innerHTML += `
